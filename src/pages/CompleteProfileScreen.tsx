@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 interface ProfileData {
@@ -20,10 +20,10 @@ interface ProfileData {
 
 export default function CompleteProfileScreen() {
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState("personal");
-  const state = (location.state as { tempToken: string }) || { tempToken: "" };
+  // const state = (location.state as { tempToken: string }) || { tempToken: "" };
 
   const [formData, setFormData] = useState<ProfileData>({
     fullname: "",

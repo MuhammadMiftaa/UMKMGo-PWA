@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  LogOut,
   Settings,
   QrCode,
   Award,
   BookOpen,
   Banknote,
-  Bell,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 
@@ -20,7 +18,8 @@ interface UserData {
 export default function DashboardScreen() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount] = useState(3);
+  // const [unreadCount, setUnreadCount] = useState(3);
 
   useEffect(() => {
     // Get user data
@@ -37,11 +36,11 @@ export default function DashboardScreen() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userData");
-    navigate("/login");
-  };
+  // const handleLogout = () => {
+  //   localStorage.removeItem("authToken");
+  //   localStorage.removeItem("userData");
+  //   navigate("/login");
+  // };
 
   const menuItems = [
     {

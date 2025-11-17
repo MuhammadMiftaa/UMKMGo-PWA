@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, File } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 
@@ -19,7 +19,7 @@ interface Document {
 
 export default function DetailActivityScreen() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  // const { id } = useParams();
 
   const [application] = useState({
     id: 1,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 
@@ -17,7 +17,7 @@ interface Application {
 
 export default function ActivityScreen() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams();
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedFilter, setSelectedFilter] = useState("semua");
   const [sortBy, setSortBy] = useState("newest");

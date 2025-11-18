@@ -28,7 +28,6 @@ export default function ResetPasswordScreen() {
         return;
       }
 
-      // Simulasi API call
       setTimeout(() => {
         navigate("/login");
       }, 500);
@@ -40,35 +39,35 @@ export default function ResetPasswordScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
+      <div className="bg-linear-to-r from-[#0077B6] to-[#00B4D8] p-6 text-white">
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
+          className="mb-6 flex items-center gap-2 opacity-80 transition-opacity hover:opacity-100"
         >
           <ArrowLeft size={20} />
-          <span>Kembali</span>
+          <span className="font-medium">Kembali</span>
         </button>
-        <h1 className="text-2xl font-bold">Reset Password</h1>
+        <div>
+          <h1 className="mb-1 text-3xl font-bold">Buat Password Baru</h1>
+          <p className="text-sm text-white/80">
+            Pastikan password yang kuat dan aman
+          </p>
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col px-6 py-8">
-        <p className="text-muted-foreground mb-8 text-center">
-          Buat password baru untuk akun Anda
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="bg-destructive/10 border-destructive/30 text-destructive rounded-lg border px-4 py-3 text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
           {/* New Password */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Password Baru
             </label>
             <div className="relative">
@@ -76,23 +75,26 @@ export default function ResetPasswordScreen() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan password baru"
+                placeholder="Minimal 8 karakter"
                 className="input-field"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                className="absolute top-1/2 right-4 -translate-y-1/2 text-[#94A3B8] transition-colors hover:text-[#0077B6]"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            <p className="mt-2 text-xs text-[#94A3B8]">
+              Gunakan kombinasi huruf, angka, dan simbol
+            </p>
           </div>
 
           {/* Confirm Password */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Konfirmasi Password
             </label>
             <input
@@ -106,7 +108,7 @@ export default function ResetPasswordScreen() {
           </div>
 
           {/* Submit Button */}
-          <button type="submit" disabled={loading} className="btn-primary mt-6">
+          <button type="submit" disabled={loading} className="btn-primary mt-8">
             {loading ? "Memproses..." : "Simpan Password"}
           </button>
         </form>

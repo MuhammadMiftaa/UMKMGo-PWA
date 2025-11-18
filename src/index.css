@@ -4,7 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-
 :root {
   --font-manrope: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
@@ -148,4 +147,88 @@
   body {
     @apply bg-background text-foreground font-manrope;
   }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica", "Arial", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Updated custom components with more elegant styling */
+@layer components {
+  /* Primary Button - Gradient with shadow */
+  .btn-primary {
+    @apply w-full rounded-xl bg-linear-to-r from-[#0077B6] to-[#0096C7] px-4 py-3.5 font-semibold text-white transition-all hover:from-[#0063A0] hover:to-[#0078A0] hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    @apply w-full rounded-xl border border-[#00B4D8]/30 bg-[#00B4D8]/10 px-4 py-3.5 font-semibold text-[#0077B6] transition-colors hover:bg-[#00B4D8]/20 disabled:opacity-50;
+  }
+
+  /* Outline Button */
+  .btn-outline {
+    @apply w-full rounded-xl border-2 border-[#0077B6] px-4 py-3 font-semibold text-[#0077B6] transition-colors hover:bg-[#0077B6]/5;
+  }
+
+  /* Input Field - Clean with focus state */
+  .input-field {
+    @apply w-full rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-[#0F172A] placeholder-[#94A3B8] transition-all focus:border-[#0077B6] focus:ring-2 focus:ring-[#0077B6]/20 focus:outline-none;
+  }
+
+  /* Card Component */
+  .card {
+    @apply rounded-2xl border border-[#F1F5F9] bg-white p-6 shadow-sm;
+  }
+
+  /* Section Title */
+  .section-title {
+    @apply text-2xl font-bold text-[#0F172A];
+  }
+
+  /* Text Muted */
+  .text-muted {
+    @apply text-sm text-[#64748B];
+  }
+
+  /* Input Group for phone prefix */
+  .input-prefix {
+    @apply flex items-center rounded-xl border border-[#E2E8F0] bg-[#F8FAFB] px-4 py-3 font-semibold text-[#0F172A];
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--border-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

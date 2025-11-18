@@ -30,7 +30,6 @@ export default function SignUpScreen() {
         return;
       }
 
-      // Simulasi API call
       localStorage.setItem("tempPhone", phone);
       localStorage.setItem("signupEmail", email);
 
@@ -45,31 +44,34 @@ export default function SignUpScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white pb-20">
-      {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
+      <div className="bg-linear-to-r from-[#0077B6] to-[#00B4D8] p-6 text-white">
         <button
           onClick={() => navigate("/")}
-          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
+          className="mb-6 flex items-center gap-2 opacity-80 transition-opacity hover:opacity-100"
         >
           <ArrowLeft size={20} />
-          <span>Kembali</span>
+          <span className="font-medium">Kembali</span>
         </button>
-        <h1 className="text-2xl font-bold">Daftar Akun Baru</h1>
+        <div>
+          <h1 className="mb-1 text-3xl font-bold">Buat Akun Baru</h1>
+          <p className="text-sm text-white/80">
+            Bergabunglah dengan ribuan UMKM sukses
+          </p>
+        </div>
       </div>
 
-      {/* Form */}
       <div className="flex-1 px-6 py-8">
-        <form onSubmit={handleSignUp} className="space-y-4">
+        <form onSubmit={handleSignUp} className="space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="bg-destructive/10 border-destructive/30 text-destructive rounded-lg border px-4 py-3 text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
           {/* Email Field */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Email
             </label>
             <input
@@ -79,17 +81,18 @@ export default function SignUpScreen() {
               placeholder="contoh@email.com"
               className="input-field"
             />
+            <p className="mt-2 text-xs text-[#94A3B8]">
+              Kami akan mengirim verifikasi ke email ini
+            </p>
           </div>
 
           {/* Phone Field */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Nomor WhatsApp
             </label>
             <div className="flex gap-2">
-              <span className="bg-input border-border text-muted-foreground flex items-center rounded-lg border px-3 font-semibold">
-                +62
-              </span>
+              <div className="input-prefix">+62</div>
               <input
                 type="tel"
                 value={phone}
@@ -98,11 +101,12 @@ export default function SignUpScreen() {
                 className="input-field flex-1"
               />
             </div>
+            <p className="mt-2 text-xs text-[#94A3B8]">Untuk verifikasi OTP</p>
           </div>
 
           {/* Password Field */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Password
             </label>
             <div className="relative">
@@ -110,51 +114,52 @@ export default function SignUpScreen() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Buat password"
+                placeholder="Minimal 8 karakter"
                 className="input-field"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                className="absolute top-1/2 right-4 -translate-y-1/2 text-[#94A3B8] transition-colors hover:text-[#0077B6]"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            <p className="mt-2 text-xs text-[#94A3B8]">
+              Gunakan kombinasi huruf, angka, dan simbol
+            </p>
           </div>
 
           {/* Confirm Password Field */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Konfirmasi Password
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Ulangi password"
+              placeholder="Ulangi password Anda"
               className="input-field"
             />
           </div>
 
           {/* Submit Button */}
-          <button type="submit" disabled={loading} className="btn-primary mt-6">
+          <button type="submit" disabled={loading} className="btn-primary mt-8">
             {loading ? "Memproses..." : "Daftar"}
           </button>
         </form>
 
-        <div className="flex-1"></div>
-
         {/* Login Link */}
-        <p className="text-muted-foreground text-center text-sm">
-          Sudah punya akun?{" "}
+        <div className="mt-8 border-t border-[#F1F5F9] pt-6 text-center">
+          <p className="mb-2 text-sm text-[#64748B]">Sudah punya akun?</p>
           <button
             onClick={() => navigate("/login")}
-            className="text-primary font-semibold hover:underline"
+            className="text-sm font-semibold text-[#0077B6] transition-colors hover:text-[#0063A0]"
           >
-            Masuk
+            Masuk sekarang
           </button>
-        </p>
+        </div>
       </div>
     </div>
   );

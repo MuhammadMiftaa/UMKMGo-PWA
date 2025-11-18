@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 
 export default function VerifyOTPScreen() {
   const navigate = useNavigate();
@@ -53,7 +53,6 @@ export default function VerifyOTPScreen() {
         return;
       }
 
-      // Simulasi API call
       const mockTempToken = "temp_token_abc123xyz";
       localStorage.setItem("tempToken", mockTempToken);
 
@@ -78,77 +77,93 @@ export default function VerifyOTPScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
+      <div className="bg-linear-to-r from-[#0077B6] to-[#00B4D8] p-6 text-white">
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
+          className="mb-6 flex items-center gap-2 opacity-80 transition-opacity hover:opacity-100"
         >
           <ArrowLeft size={20} />
-          <span>Kembali</span>
+          <span className="font-medium">Kembali</span>
         </button>
-        <h1 className="text-2xl font-bold">Verifikasi Nomor</h1>
+        <div>
+          <h1 className="mb-1 text-3xl font-bold">Verifikasi Nomor</h1>
+          <p className="text-sm text-white/80">
+            Masukkan kode yang telah kami kirim
+          </p>
+        </div>
       </div>
 
-      {/* Content */}
       <div className="flex flex-1 flex-col px-6 py-8">
-        <p className="text-muted-foreground mb-8 text-center">
-          Kode OTP telah dikirim ke <br />
-          <span className="text-foreground font-semibold">
-            {maskPhone(state.phone)}
-          </span>
-        </p>
+        {/* Info Box */}
+        <div className="mb-8 flex gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <MessageCircle size={20} className="mt-0.5 shrink-0 text-[#0077B6]" />
+          <div>
+            <p className="mb-1 text-sm font-semibold text-[#0F172A]">
+              Kode OTP dikirim via WhatsApp
+            </p>
+            <p className="text-sm text-[#64748B]">
+              Ke nomor{" "}
+              <span className="font-semibold">{maskPhone(state.phone)}</span>.
+              Masukkan kode 6 digit yang Anda terima.
+            </p>
+          </div>
+        </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-destructive/10 border-destructive/30 text-destructive mb-6 rounded-lg border px-4 py-3 text-sm">
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {/* OTP Input */}
-        <div className="mb-8 flex justify-center gap-3">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              type="text"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleOtpChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              className="border-border focus:border-primary focus:ring-primary/20 h-12 w-12 rounded-lg border-2 text-center text-xl font-bold focus:ring-2 focus:outline-none"
-              inputMode="numeric"
-            />
-          ))}
+        {/* OTP Input - improved styling and spacing */}
+        <div className="mb-8">
+          <label className="mb-4 block text-sm font-semibold text-[#0F172A]">
+            Kode Verifikasi
+          </label>
+          <div className="flex justify-center gap-3">
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
+                type="text"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="h-14 w-14 rounded-xl border-2 border-[#E2E8F0] bg-[#F8FAFB] text-center text-2xl font-bold transition-all focus:border-[#0077B6] focus:ring-2 focus:ring-[#0077B6]/20 focus:outline-none"
+                inputMode="numeric"
+              />
+            ))}
+          </div>
         </div>
 
         {/* Timer */}
-        <div className="mb-6 text-center">
+        <div className="mb-8 text-center">
           {timer > 0 ? (
-            <p className="text-muted-foreground">
-              Kirim ulang dalam{" "}
-              <span className="text-primary font-semibold">{timer}</span> detik
+            <p className="text-sm text-[#64748B]">
+              Kirim ulang kode dalam{" "}
+              <span className="font-bold text-[#0077B6]">{timer}s</span>
             </p>
           ) : (
             <button
               onClick={() => setTimer(59)}
-              className="text-primary font-semibold hover:underline"
+              className="text-sm font-semibold text-[#0077B6] transition-colors hover:text-[#0063A0]"
             >
               Kirim Ulang OTP
             </button>
           )}
         </div>
 
-        {/* Verify Button */}
+        {/* Verify Button - renamed to more descriptive title */}
         <button
           onClick={handleVerifyOTP}
           disabled={loading || otp.some((d) => !d)}
           className="btn-primary"
         >
-          {loading ? "Memverifikasi..." : "Verifikasi"}
+          {loading ? "Memverifikasi..." : "Verifikasi Kode"}
         </button>
 
         <div className="flex-1"></div>

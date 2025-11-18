@@ -20,7 +20,6 @@ export default function ForgotPasswordScreen() {
         return;
       }
 
-      // Simulasi API call
       setTimeout(() => {
         navigate("/verify-otp", { state: { phone, mode: "forgot-password" } });
       }, 500);
@@ -32,41 +31,44 @@ export default function ForgotPasswordScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
+      <div className="bg-linear-to-r from-[#0077B6] to-[#00B4D8] p-6 text-white">
         <button
           onClick={() => navigate("/login")}
-          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
+          className="mb-6 flex items-center gap-2 opacity-80 transition-opacity hover:opacity-100"
         >
           <ArrowLeft size={20} />
-          <span>Kembali</span>
+          <span className="font-medium">Kembali</span>
         </button>
-        <h1 className="text-2xl font-bold">Lupa Password</h1>
+        <div>
+          <h1 className="mb-1 text-3xl font-bold">Reset Password</h1>
+          <p className="text-sm text-white/80">
+            Kami akan mengirimkan kode ke WhatsApp Anda
+          </p>
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col px-6 py-8">
-        <p className="text-muted-foreground mb-8 text-center">
-          Masukkan nomor WhatsApp terdaftar Anda untuk mereset password
+        <p className="mb-8 text-center text-[#64748B]">
+          Masukkan nomor WhatsApp yang terdaftar untuk memulai proses reset
+          password.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="bg-destructive/10 border-destructive/30 text-destructive rounded-lg border px-4 py-3 text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
           {/* Phone Field */}
           <div>
-            <label className="text-foreground mb-2 block text-sm font-semibold">
+            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
               Nomor WhatsApp
             </label>
             <div className="flex gap-2">
-              <span className="bg-input border-border text-muted-foreground flex items-center rounded-lg border px-3 font-semibold">
-                +62
-              </span>
+              <div className="input-prefix">+62</div>
               <input
                 type="tel"
                 value={phone}
@@ -75,10 +77,13 @@ export default function ForgotPasswordScreen() {
                 className="input-field flex-1"
               />
             </div>
+            <p className="mt-2 text-xs text-[#94A3B8]">
+              Gunakan nomor yang terdaftar di akun Anda
+            </p>
           </div>
 
           {/* Submit Button */}
-          <button type="submit" disabled={loading} className="btn-primary mt-6">
+          <button type="submit" disabled={loading} className="btn-primary mt-8">
             {loading ? "Mengirim..." : "Kirim Kode OTP"}
           </button>
         </form>

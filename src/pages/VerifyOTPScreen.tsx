@@ -1,6 +1,8 @@
+// src/pages/VerifyOTPScreen.tsx
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { ArrowLeft, Shield, MessageSquare } from "lucide-react";
 
 export default function VerifyOTPScreen() {
   const navigate = useNavigate();
@@ -53,7 +55,6 @@ export default function VerifyOTPScreen() {
         return;
       }
 
-      // Simulasi API call
       const mockTempToken = "temp_token_abc123xyz";
       localStorage.setItem("tempToken", mockTempToken);
 
@@ -78,33 +79,56 @@ export default function VerifyOTPScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
+      {/* Header with gradient */}
+      <div className="from-primary via-accent to-secondary relative overflow-hidden bg-linear-to-br px-6 py-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
+          className="mb-6 flex items-center gap-2 text-white/90 transition-colors hover:text-white"
         >
           <ArrowLeft size={20} />
-          <span>Kembali</span>
+          <span className="text-sm font-medium">Kembali</span>
         </button>
-        <h1 className="text-2xl font-bold">Verifikasi Nomor</h1>
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+            <Shield className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Verifikasi</h1>
+            <p className="mt-1 text-white/80">Konfirmasi nomor Anda</p>
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
+      {/* Content Section */}
       <div className="flex flex-1 flex-col px-6 py-8">
-        <p className="text-muted-foreground mb-8 text-center">
-          Kode OTP telah dikirim ke <br />
-          <span className="text-foreground font-semibold">
+        {/* Info Card */}
+        <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/50 p-6">
+          <div className="mb-3 flex items-center gap-3">
+            <MessageSquare className="text-primary h-5 w-5" />
+            <p className="text-foreground font-semibold">Kode OTP Terkirim</p>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Kami telah mengirimkan kode verifikasi 6 digit ke nomor WhatsApp
+            Anda
+          </p>
+          <p className="text-primary mt-2 text-center text-lg font-bold">
             {maskPhone(state.phone)}
-          </span>
-        </p>
+          </p>
+        </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-destructive/10 border-destructive/30 text-destructive mb-6 rounded-lg border px-4 py-3 text-sm">
+          <div className="border-destructive/20 bg-destructive/5 text-destructive mb-6 rounded-xl border px-4 py-3 text-sm">
             {error}
           </div>
         )}
+
+        {/* Instructions */}
+        <div className="mb-6 text-center">
+          <p className="text-muted-foreground text-sm font-medium">
+            Masukkan kode OTP yang Anda terima
+          </p>
+        </div>
 
         {/* OTP Input */}
         <div className="mb-8 flex justify-center gap-3">
@@ -119,39 +143,58 @@ export default function VerifyOTPScreen() {
               value={digit}
               onChange={(e) => handleOtpChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="border-border focus:border-primary focus:ring-primary/20 h-12 w-12 rounded-lg border-2 text-center text-xl font-bold focus:ring-2 focus:outline-none"
+              className="border-border focus:border-primary focus:ring-primary/10 h-14 w-12 rounded-xl border-2 bg-white text-center text-xl font-bold transition-all focus:ring-4 focus:outline-none"
               inputMode="numeric"
             />
           ))}
         </div>
 
-        {/* Timer */}
-        <div className="mb-6 text-center">
+        {/* Timer & Resend */}
+        <div className="mb-8 text-center">
           {timer > 0 ? (
-            <p className="text-muted-foreground">
-              Kirim ulang dalam{" "}
-              <span className="text-primary font-semibold">{timer}</span> detik
+            <p className="text-muted-foreground text-sm">
+              Kirim ulang kode dalam{" "}
+              <span className="text-primary font-semibold">{timer} detik</span>
             </p>
           ) : (
             <button
               onClick={() => setTimer(59)}
-              className="text-primary font-semibold hover:underline"
+              className="text-primary text-sm font-semibold hover:underline"
             >
-              Kirim Ulang OTP
+              Kirim Ulang Kode OTP
             </button>
           )}
         </div>
 
         {/* Verify Button */}
-        <button
+        <Button
           onClick={handleVerifyOTP}
           disabled={loading || otp.some((d) => !d)}
-          className="btn-primary"
+          variant="gradient"
+          size="lg"
+          className="w-full"
         >
-          {loading ? "Memverifikasi..." : "Verifikasi"}
-        </button>
+          {loading ? (
+            <>
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <span>Memverifikasi...</span>
+            </>
+          ) : (
+            <>
+              <Shield size={20} />
+              <span>Verifikasi Sekarang</span>
+            </>
+          )}
+        </Button>
 
-        <div className="flex-1"></div>
+        <div className="flex-1" />
+
+        {/* Help Text */}
+        <div className="mt-8 text-center">
+          <p className="text-muted-foreground text-xs">
+            Tidak menerima kode? Pastikan nomor WhatsApp Anda aktif
+          </p>
+        </div>
       </div>
     </div>
   );

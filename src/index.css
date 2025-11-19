@@ -1,15 +1,15 @@
+/* src/index.css */
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
-
 :root {
   --font-manrope: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   /* === Light Mode (UMKM Go Theme) === */
-  --background: oklch(0.96 0.03 230.5); /* Putih kebiruan - #E3F2FD */
+  --background: oklch(0.99 0.01 230.5); /* Putih bersih dengan hint biru */
   --foreground: oklch(0.15 0 0);
 
   --card: oklch(1 0 0);
@@ -27,36 +27,35 @@
   --accent: oklch(0.64 0.15 235.2); /* Aksen gradasi tengah - #0096C7 */
   --accent-foreground: oklch(0.98 0 0);
 
-  --muted: oklch(0.93 0.02 230.5);
-  --muted-foreground: oklch(0.45 0.04 230.5);
+  --muted: oklch(0.96 0.01 230.5);
+  --muted-foreground: oklch(0.48 0.04 230.5);
 
   --destructive: oklch(0.63 0.24 25.33);
   --destructive-foreground: oklch(0.98 0 0);
 
-  --border: oklch(0.92 0.03 230.5);
-  --input: oklch(0.92 0.03 230.5);
+  --border: oklch(0.94 0.02 230.5);
+  --input: oklch(0.94 0.02 230.5);
   --ring: oklch(0.53 0.18 247.1);
 
-  --chart-1: oklch(0.53 0.18 247.1); /* Biru utama */
-  --chart-2: oklch(0.72 0.13 217.7); /* Biru muda */
-  --chart-3: oklch(0.64 0.15 235.2); /* Aksen */
-  --chart-4: oklch(0.36 0.13 254.3); /* Biru gelap hover - #023E8A */
-  --chart-5: oklch(0.96 0.03 230.5); /* Putih kebiruan */
+  --chart-1: oklch(0.53 0.18 247.1);
+  --chart-2: oklch(0.72 0.13 217.7);
+  --chart-3: oklch(0.64 0.15 235.2);
+  --chart-4: oklch(0.36 0.13 254.3);
+  --chart-5: oklch(0.96 0.03 230.5);
 
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
-  --sidebar: oklch(0.96 0.03 230.5);
+  --sidebar: oklch(0.99 0.01 230.5);
   --sidebar-foreground: oklch(0.15 0 0);
   --sidebar-primary: oklch(0.53 0.18 247.1);
   --sidebar-primary-foreground: oklch(0.98 0 0);
   --sidebar-accent: oklch(0.72 0.13 217.7);
   --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.92 0.03 230.5);
+  --sidebar-border: oklch(0.94 0.02 230.5);
   --sidebar-ring: oklch(0.53 0.18 247.1);
 }
 
 .dark {
-  /* === Dark Mode (UMKM Go Theme) === */
   --background: oklch(0.15 0 0);
   --foreground: oklch(0.98 0 0);
 
@@ -66,13 +65,13 @@
   --popover: oklch(0.15 0 0);
   --popover-foreground: oklch(0.98 0 0);
 
-  --primary: oklch(0.72 0.13 217.7); /* Biru muda - #00B4D8 */
+  --primary: oklch(0.72 0.13 217.7);
   --primary-foreground: oklch(0.15 0 0);
 
-  --secondary: oklch(0.36 0.13 254.3); /* Biru gelap - #023E8A */
+  --secondary: oklch(0.36 0.13 254.3);
   --secondary-foreground: oklch(0.98 0 0);
 
-  --accent: oklch(0.53 0.18 247.1); /* Biru utama */
+  --accent: oklch(0.53 0.18 247.1);
   --accent-foreground: oklch(0.98 0 0);
 
   --muted: oklch(0.25 0.03 230.5);
@@ -146,6 +145,22 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-manrope;
+    @apply bg-background text-foreground font-manrope antialiased;
   }
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
 }

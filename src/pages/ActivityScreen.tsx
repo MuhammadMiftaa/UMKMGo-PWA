@@ -1,6 +1,16 @@
+// src/pages/ActivityScreen.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent } from "../components/ui/Card";
+import {
+  ChevronDown,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  History,
+} from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 
 interface Application {
@@ -17,13 +27,11 @@ interface Application {
 
 export default function ActivityScreen() {
   const navigate = useNavigate();
-  // const [searchParams] = useSearchParams();
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedFilter, setSelectedFilter] = useState("semua");
   const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
-    // Mock data
     setApplications([
       {
         id: 1,
@@ -63,28 +71,42 @@ export default function ActivityScreen() {
 
   const getStatusBadge = (status: string) => {
     const statusMap: {
-      [key: string]: { bg: string; text: string; label: string };
+      [key: string]: {
+        bg: string;
+        text: string;
+        label: string;
+        icon: React.ReactNode;
+      };
     } = {
       screening: {
-        bg: "bg-warning/10",
-        text: "text-warning",
+        bg: "bg-blue-100",
+        text: "text-blue-700",
         label: "Screening",
+        icon: <Clock size={14} />,
       },
       revised: {
-        bg: "bg-warning/10",
-        text: "text-warning",
+        bg: "bg-amber-100",
+        text: "text-amber-700",
         label: "Perlu Revisi",
+        icon: <AlertCircle size={14} />,
       },
-      final: { bg: "bg-primary/10", text: "text-primary", label: "Final" },
+      final: {
+        bg: "bg-indigo-100",
+        text: "text-indigo-700",
+        label: "Final",
+        icon: <History size={14} />,
+      },
       approved: {
-        bg: "bg-success/10",
-        text: "text-success",
+        bg: "bg-green-100",
+        text: "text-green-700",
         label: "Disetujui",
+        icon: <CheckCircle2 size={14} />,
       },
       rejected: {
-        bg: "bg-destructive/10",
-        text: "text-destructive",
+        bg: "bg-red-100",
+        text: "text-red-700",
         label: "Ditolak",
+        icon: <XCircle size={14} />,
       },
     };
     return statusMap[status] || statusMap["screening"];
@@ -124,30 +146,33 @@ export default function ActivityScreen() {
   ];
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white pb-24">
       {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
-        <h1 className="text-2xl font-bold">Riwayat Pengajuan</h1>
-        <p className="mt-1 text-sm text-white/80">
-          Pantau status aplikasi Anda
-        </p>
+      <div className="from-primary via-accent to-secondary relative overflow-hidden bg-linear-to-br px-6 py-8">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white">Riwayat Pengajuan</h1>
+          <p className="mt-2 text-white/80">Pantau status aplikasi Anda</p>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="border-border border-b px-6 py-4">
+      {/* Filters Section */}
+      <div className="border-b border-blue-100 bg-white px-6 py-4">
         <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
           {filters.map((filter) => (
-            <button
+            <Button
               key={filter.id}
               onClick={() => setSelectedFilter(filter.id)}
-              className={`rounded-full px-4 py-2 font-semibold whitespace-nowrap transition-colors ${
+              variant={selectedFilter === filter.id ? "default" : "outline"}
+              size="sm"
+              className={`whitespace-nowrap ${
                 selectedFilter === filter.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-border"
+                  ? "from-primary to-accent bg-linear-to-r"
+                  : ""
               }`}
             >
               {filter.label}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -165,11 +190,17 @@ export default function ActivityScreen() {
         </div>
       </div>
 
-      {/* List */}
-      <div className="px-6 py-4">
+      {/* Applications List */}
+      <div className="px-6 py-6">
         {sortedApplications.length === 0 ? (
-          <div className="py-12 text-center">
+          <div className="py-16 text-center">
+            <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
+              <History className="text-primary h-8 w-8" />
+            </div>
             <p className="text-muted-foreground">Belum ada pengajuan</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Mulai ajukan program yang Anda butuhkan
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -179,30 +210,49 @@ export default function ActivityScreen() {
                 <button
                   key={app.id}
                   onClick={() => navigate(`/activity/${app.id}`)}
-                  className="border-border w-full rounded-lg border bg-white p-4 text-left transition-shadow hover:shadow-md"
+                  className="w-full text-left"
                 >
-                  <div className="mb-2 flex items-start justify-between">
-                    <div>
-                      <h3 className="text-foreground font-semibold">
-                        {app.program.title}
-                      </h3>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {getTypeLabel(app.type)}
-                      </p>
-                    </div>
-                    <div
-                      className={`${statusBadge.bg} ${statusBadge.text} rounded-full px-3 py-1 text-xs font-semibold`}
-                    >
-                      {statusBadge.label}
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {new Date(app.submitted_at).toLocaleDateString("id-ID", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
+                  <Card className="border-blue-100 transition-all hover:scale-[1.02] hover:shadow-lg">
+                    <CardContent className="p-4">
+                      <div className="mb-3 flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-foreground font-semibold">
+                            {app.program.title}
+                          </h3>
+                          <p className="text-muted-foreground mt-1 text-xs">
+                            {getTypeLabel(app.type)}
+                          </p>
+                        </div>
+                        <div
+                          className={`flex items-center gap-1.5 rounded-full ${statusBadge.bg} px-3 py-1.5`}
+                        >
+                          <span className={statusBadge.text}>
+                            {statusBadge.icon}
+                          </span>
+                          <span
+                            className={`text-xs font-semibold ${statusBadge.text}`}
+                          >
+                            {statusBadge.label}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-muted-foreground text-xs">
+                          {new Date(app.submitted_at).toLocaleDateString(
+                            "id-ID",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
+                        </p>
+                        <p className="text-primary text-xs font-semibold">
+                          Lihat Detail →
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </button>
               );
             })}

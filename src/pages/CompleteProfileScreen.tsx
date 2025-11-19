@@ -1,6 +1,10 @@
+// src/pages/CompleteProfileScreen.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { ArrowLeft, User, CheckCircle2 } from "lucide-react";
 
 interface ProfileData {
   fullname: string;
@@ -20,10 +24,7 @@ interface ProfileData {
 
 export default function CompleteProfileScreen() {
   const navigate = useNavigate();
-  // const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [activeSection, setActiveSection] = useState("personal");
-  // const state = (location.state as { tempToken: string }) || { tempToken: "" };
 
   const [formData, setFormData] = useState<ProfileData>({
     fullname: "",
@@ -71,7 +72,6 @@ export default function CompleteProfileScreen() {
     setLoading(true);
 
     try {
-      // Simulasi API call
       const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
       localStorage.setItem("authToken", mockToken);
       localStorage.setItem("userData", JSON.stringify(formData));
@@ -86,150 +86,131 @@ export default function CompleteProfileScreen() {
     }
   };
 
-  const sections = [
-    { id: "personal", label: "Data Pribadi" },
-    { id: "business", label: "Data Usaha" },
-    { id: "address", label: "Alamat" },
-  ];
-
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-24">
+    <div className="flex min-h-screen flex-col bg-white">
       {/* Header */}
-      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
+      <div className="from-primary via-accent to-secondary relative overflow-hidden bg-linear-to-br px-6 py-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
+          className="mb-6 flex items-center gap-2 text-white/90 transition-colors hover:text-white"
         >
           <ArrowLeft size={20} />
-          <span>Kembali</span>
+          <span className="text-sm font-medium">Kembali</span>
         </button>
-        <h1 className="text-2xl font-bold">Lengkapi Data Diri</h1>
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+            <User className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Lengkapi Profil</h1>
+            <p className="mt-1 text-white/80">Satu langkah lagi</p>
+          </div>
+        </div>
       </div>
 
-      {/* Section Tabs */}
-      <div className="border-border flex gap-2 overflow-x-auto border-b px-6 py-4">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => setActiveSection(section.id)}
-            className={`rounded-lg px-4 py-2 font-semibold whitespace-nowrap transition-colors ${
-              activeSection === section.id
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground hover:bg-border"
-            }`}
-          >
-            {section.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Form */}
+      {/* Form Section */}
       <div className="flex-1 px-6 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Data Section */}
-          {activeSection === "personal" && (
+          {/* Personal Info Section */}
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-6">
+            <h2 className="text-foreground mb-4 font-semibold">Data Pribadi</h2>
             <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Nama Lengkap
-                </label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <Label htmlFor="fullname">Nama Lengkap</Label>
+                <Input
+                  id="fullname"
                   name="fullname"
                   value={formData.fullname}
                   onChange={handleInputChange}
-                  placeholder="Nama Lengkap"
-                  className="input-field"
+                  placeholder="Nama lengkap sesuai KTP"
                   required
                 />
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  NIK (16 digit)
-                </label>
-                <input
-                  type="text"
+
+              <div className="space-y-2">
+                <Label htmlFor="nik">NIK (16 digit)</Label>
+                <Input
+                  id="nik"
                   name="nik"
                   value={formData.nik}
                   onChange={handleInputChange}
                   placeholder="1234567890987654"
                   pattern="[0-9]{16}"
-                  className="input-field"
+                  maxLength={16}
                   required
                 />
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Jenis Kelamin
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  required
-                >
-                  <option value="">Pilih Jenis Kelamin</option>
-                  <option value="male">Laki-laki</option>
-                  <option value="female">Perempuan</option>
-                </select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Jenis Kelamin</Label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                    required
+                  >
+                    <option value="">Pilih</option>
+                    <option value="male">Laki-laki</option>
+                    <option value="female">Perempuan</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="birthDate">Tanggal Lahir</Label>
+                  <Input
+                    id="birthDate"
+                    name="birthDate"
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Tanggal Lahir
-                </label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={formData.birthDate}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Password
-                </label>
-                <input
-                  type="password"
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Buat Password</Label>
+                <Input
+                  id="password"
                   name="password"
+                  type="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="Buat password baru"
-                  className="input-field"
+                  placeholder="Minimal 8 karakter"
+                  minLength={8}
                   required
                 />
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Business Data Section */}
-          {activeSection === "business" && (
+          {/* Business Info Section */}
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-6">
+            <h2 className="text-foreground mb-4 font-semibold">Data Usaha</h2>
             <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Nama Usaha
-                </label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <Label htmlFor="businessName">Nama Usaha</Label>
+                <Input
+                  id="businessName"
                   name="businessName"
                   value={formData.businessName}
                   onChange={handleInputChange}
-                  placeholder="Nama Usaha"
-                  className="input-field"
+                  placeholder="Nama usaha Anda"
                   required
                 />
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Jenis Kartu
-                </label>
+
+              <div className="space-y-2">
+                <Label htmlFor="kartuType">Jenis Kartu UMKM</Label>
                 <select
+                  id="kartuType"
                   name="kartuType"
                   value={formData.kartuType}
                   onChange={handleInputChange}
-                  className="input-field"
+                  className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
                   required
                 >
                   <option value="">Pilih Jenis Kartu</option>
@@ -237,115 +218,130 @@ export default function CompleteProfileScreen() {
                   <option value="afirmatif">Kartu Afirmatif</option>
                 </select>
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Nomor Kartu
-                </label>
-                <input
-                  type="text"
+
+              <div className="space-y-2">
+                <Label htmlFor="kartuNumber">Nomor Kartu</Label>
+                <Input
+                  id="kartuNumber"
                   name="kartuNumber"
                   value={formData.kartuNumber}
                   onChange={handleInputChange}
-                  placeholder="Nomor Kartu"
-                  className="input-field"
+                  placeholder="Nomor kartu UMKM"
                   required
                 />
               </div>
             </div>
-          )}
+          </div>
 
           {/* Address Section */}
-          {activeSection === "address" && (
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-6">
+            <h2 className="text-foreground mb-4 font-semibold">Alamat</h2>
             <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Alamat Lengkap
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="address">Alamat Lengkap</Label>
                 <textarea
+                  id="address"
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Alamat Lengkap"
+                  placeholder="Jalan, RT/RW, Kelurahan"
                   rows={3}
-                  className="input-field"
+                  className="border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary/10 flex w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
                   required
                 />
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Provinsi
-                </label>
-                <select
-                  name="provinceId"
-                  value={formData.provinceId}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  required
-                >
-                  <option value="">Pilih Provinsi</option>
-                  {provinces.map((prov) => (
-                    <option key={prov.id} value={prov.id}>
-                      {prov.name}
-                    </option>
-                  ))}
-                </select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="provinceId">Provinsi</Label>
+                  <select
+                    id="provinceId"
+                    name="provinceId"
+                    value={formData.provinceId}
+                    onChange={handleInputChange}
+                    className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                    required
+                  >
+                    <option value="">Pilih</option>
+                    {provinces.map((prov) => (
+                      <option key={prov.id} value={prov.id}>
+                        {prov.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cityId">Kota/Kab</Label>
+                  <select
+                    id="cityId"
+                    name="cityId"
+                    value={formData.cityId}
+                    onChange={handleInputChange}
+                    className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                    required
+                    disabled={!formData.provinceId}
+                  >
+                    <option value="">Pilih</option>
+                    {filteredCities.map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Kota/Kabupaten
-                </label>
-                <select
-                  name="cityId"
-                  value={formData.cityId}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  required
-                  disabled={!formData.provinceId}
-                >
-                  <option value="">Pilih Kota/Kabupaten</option>
-                  {filteredCities.map((city) => (
-                    <option key={city.id} value={city.id}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Kecamatan
-                </label>
-                <input
-                  type="text"
-                  name="district"
-                  value={formData.district}
-                  onChange={handleInputChange}
-                  placeholder="Kecamatan"
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Kode Pos
-                </label>
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={formData.postalCode}
-                  onChange={handleInputChange}
-                  placeholder="60210"
-                  pattern="[0-9]{5}"
-                  className="input-field"
-                  required
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="district">Kecamatan</Label>
+                  <Input
+                    id="district"
+                    name="district"
+                    value={formData.district}
+                    onChange={handleInputChange}
+                    placeholder="Kecamatan"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Kode Pos</Label>
+                  <Input
+                    id="postalCode"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleInputChange}
+                    placeholder="60210"
+                    pattern="[0-9]{5}"
+                    maxLength={5}
+                    required
+                  />
+                </div>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Submit Button */}
-          <button type="submit" disabled={loading} className="btn-primary mt-8">
-            {loading ? "Memproses..." : "Selesai"}
-          </button>
+          <Button
+            type="submit"
+            disabled={loading}
+            variant="gradient"
+            size="lg"
+            className="w-full"
+          >
+            {loading ? (
+              <>
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>Menyimpan...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={20} />
+                <span>Selesai & Mulai</span>
+              </>
+            )}
+          </Button>
         </form>
       </div>
     </div>

@@ -16,12 +16,14 @@ export default function LoginScreen() {
     setError("");
 
     try {
+      // Simulasi API call
       if (!phone || !password) {
         setError("Semua field harus diisi");
         setLoading(false);
         return;
       }
 
+      // Simulasi token response
       const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
       localStorage.setItem("authToken", mockToken);
       localStorage.setItem("userPhone", phone);
@@ -37,36 +39,37 @@ export default function LoginScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <div className="bg-linear-to-r from-[#0077B6] to-[#00B4D8] p-6 text-white">
+      {/* Header */}
+      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
         <button
           onClick={() => navigate("/")}
-          className="mb-6 flex items-center gap-2 opacity-80 transition-opacity hover:opacity-100"
+          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
         >
           <ArrowLeft size={20} />
-          <span className="font-medium">Kembali</span>
+          <span>Kembali</span>
         </button>
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">Selamat Datang Kembali</h1>
-          <p className="text-sm text-white/80">Masuk ke akun UMKMGo Anda</p>
-        </div>
+        <h1 className="text-2xl font-bold">Masuk ke Akun</h1>
       </div>
 
+      {/* Form */}
       <div className="flex flex-1 flex-col px-6 py-8">
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
           {/* Error Message */}
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="bg-destructive/10 border-destructive/30 text-destructive rounded-lg border px-4 py-3 text-sm">
               {error}
             </div>
           )}
 
           {/* Phone Field */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+            <label className="text-foreground mb-2 block text-sm font-semibold">
               Nomor WhatsApp
             </label>
             <div className="flex gap-2">
-              <div className="input-prefix">+62</div>
+              <span className="bg-input border-border text-muted-foreground flex items-center rounded-lg border px-3 font-semibold">
+                +62
+              </span>
               <input
                 type="tel"
                 value={phone}
@@ -75,14 +78,11 @@ export default function LoginScreen() {
                 className="input-field flex-1"
               />
             </div>
-            <p className="mt-2 text-xs text-[#94A3B8]">
-              Gunakan nomor WhatsApp yang terdaftar
-            </p>
           </div>
 
           {/* Password Field */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+            <label className="text-foreground mb-2 block text-sm font-semibold">
               Password
             </label>
             <div className="relative">
@@ -90,32 +90,32 @@ export default function LoginScreen() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan password Anda"
+                placeholder="Masukkan password"
                 className="input-field"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-1/2 right-4 -translate-y-1/2 text-[#94A3B8] transition-colors hover:text-[#0077B6]"
+                className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>
 
-          {/* Forgot Password Link */}
-          <div className="text-right">
+          {/* Links */}
+          <div className="flex justify-between pt-2 text-sm">
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
-              className="text-sm font-semibold text-[#0077B6] transition-colors hover:text-[#0063A0]"
+              className="text-primary font-semibold hover:underline"
             >
               Lupa Password?
             </button>
           </div>
 
           {/* Submit Button */}
-          <button type="submit" disabled={loading} className="btn-primary mt-8">
+          <button type="submit" disabled={loading} className="btn-primary mt-6">
             {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
@@ -123,15 +123,15 @@ export default function LoginScreen() {
         <div className="flex-1"></div>
 
         {/* Sign Up Link */}
-        <div className="border-t border-[#F1F5F9] pt-6 text-center">
-          <p className="mb-2 text-sm text-[#64748B]">Belum punya akun?</p>
+        <p className="text-muted-foreground pb-4 text-center text-sm">
+          Belum punya akun?{" "}
           <button
             onClick={() => navigate("/signup")}
-            className="text-sm font-semibold text-[#0077B6] transition-colors hover:text-[#0063A0]"
+            className="text-primary font-semibold hover:underline"
           >
-            Daftar sekarang
+            Daftar
           </button>
-        </div>
+        </p>
       </div>
     </div>
   );

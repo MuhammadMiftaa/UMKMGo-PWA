@@ -22,6 +22,7 @@ export default function CompleteProfileScreen() {
   const navigate = useNavigate();
   // const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState("personal");
   // const state = (location.state as { tempToken: string }) || { tempToken: "" };
 
   const [formData, setFormData] = useState<ProfileData>({
@@ -70,6 +71,7 @@ export default function CompleteProfileScreen() {
     setLoading(true);
 
     try {
+      // Simulasi API call
       const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
       localStorage.setItem("authToken", mockToken);
       localStorage.setItem("userData", JSON.stringify(formData));
@@ -84,34 +86,51 @@ export default function CompleteProfileScreen() {
     }
   };
 
+  const sections = [
+    { id: "personal", label: "Data Pribadi" },
+    { id: "business", label: "Data Usaha" },
+    { id: "address", label: "Alamat" },
+  ];
+
   return (
     <div className="flex min-h-screen flex-col bg-white pb-24">
-      <div className="bg-linear-to-r from-[#0077B6] to-[#00B4D8] p-6 text-white">
+      {/* Header */}
+      <div className="from-primary to-accent bg-linear-to-r p-6 text-white">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-2 opacity-80 transition-opacity hover:opacity-100"
+          className="mb-4 flex items-center gap-2 opacity-80 hover:opacity-100"
         >
           <ArrowLeft size={20} />
-          <span className="font-medium">Kembali</span>
+          <span>Kembali</span>
         </button>
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">Lengkapi Data Diri</h1>
-          <p className="text-sm text-white/80">
-            Semua data ada di satu halaman
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Lengkapi Data Diri</h1>
       </div>
 
+      {/* Section Tabs */}
+      <div className="border-border flex gap-2 overflow-x-auto border-b px-6 py-4">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => setActiveSection(section.id)}
+            className={`rounded-lg px-4 py-2 font-semibold whitespace-nowrap transition-colors ${
+              activeSection === section.id
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground hover:bg-border"
+            }`}
+          >
+            {section.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Form */}
       <div className="flex-1 px-6 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Data Section */}
-          <div>
-            <h3 className="mb-4 text-lg font-bold text-[#0F172A]">
-              Data Pribadi
-            </h3>
+          {activeSection === "personal" && (
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+                <label className="mb-2 block text-sm font-semibold">
                   Nama Lengkap
                 </label>
                 <input
@@ -119,48 +138,44 @@ export default function CompleteProfileScreen() {
                   name="fullname"
                   value={formData.fullname}
                   onChange={handleInputChange}
-                  placeholder="Masukkan nama lengkap"
+                  placeholder="Nama Lengkap"
                   className="input-field"
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    NIK (16 digit)
-                  </label>
-                  <input
-                    type="text"
-                    name="nik"
-                    value={formData.nik}
-                    onChange={handleInputChange}
-                    placeholder="1234567890..."
-                    pattern="[0-9]{16}"
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Jenis Kelamin
-                  </label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    className="input-field"
-                    required
-                  >
-                    <option value="">Pilih</option>
-                    <option value="male">Laki-laki</option>
-                    <option value="female">Perempuan</option>
-                  </select>
-                </div>
-              </div>
-
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+                <label className="mb-2 block text-sm font-semibold">
+                  NIK (16 digit)
+                </label>
+                <input
+                  type="text"
+                  name="nik"
+                  value={formData.nik}
+                  onChange={handleInputChange}
+                  placeholder="1234567890987654"
+                  pattern="[0-9]{16}"
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Jenis Kelamin
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  required
+                >
+                  <option value="">Pilih Jenis Kelamin</option>
+                  <option value="male">Laki-laki</option>
+                  <option value="female">Perempuan</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
                   Tanggal Lahir
                 </label>
                 <input
@@ -172,9 +187,8 @@ export default function CompleteProfileScreen() {
                   required
                 />
               </div>
-
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+                <label className="mb-2 block text-sm font-semibold">
                   Password
                 </label>
                 <input
@@ -182,25 +196,19 @@ export default function CompleteProfileScreen() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="Buat password untuk keamanan"
+                  placeholder="Buat password baru"
                   className="input-field"
                   required
                 />
               </div>
             </div>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-[#F1F5F9]"></div>
+          )}
 
           {/* Business Data Section */}
-          <div>
-            <h3 className="mb-4 text-lg font-bold text-[#0F172A]">
-              Data Usaha
-            </h3>
+          {activeSection === "business" && (
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+                <label className="mb-2 block text-sm font-semibold">
                   Nama Usaha
                 </label>
                 <input
@@ -208,148 +216,135 @@ export default function CompleteProfileScreen() {
                   name="businessName"
                   value={formData.businessName}
                   onChange={handleInputChange}
-                  placeholder="Masukkan nama usaha"
+                  placeholder="Nama Usaha"
                   className="input-field"
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Jenis Kartu
-                  </label>
-                  <select
-                    name="kartuType"
-                    value={formData.kartuType}
-                    onChange={handleInputChange}
-                    className="input-field"
-                    required
-                  >
-                    <option value="">Pilih</option>
-                    <option value="produktif">Kartu Produktif</option>
-                    <option value="afirmatif">Kartu Afirmatif</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Nomor Kartu
-                  </label>
-                  <input
-                    type="text"
-                    name="kartuNumber"
-                    value={formData.kartuNumber}
-                    onChange={handleInputChange}
-                    placeholder="Nomor kartu"
-                    className="input-field"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Jenis Kartu
+                </label>
+                <select
+                  name="kartuType"
+                  value={formData.kartuType}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  required
+                >
+                  <option value="">Pilih Jenis Kartu</option>
+                  <option value="produktif">Kartu Produktif</option>
+                  <option value="afirmatif">Kartu Afirmatif</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Nomor Kartu
+                </label>
+                <input
+                  type="text"
+                  name="kartuNumber"
+                  value={formData.kartuNumber}
+                  onChange={handleInputChange}
+                  placeholder="Nomor Kartu"
+                  className="input-field"
+                  required
+                />
               </div>
             </div>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-[#F1F5F9]"></div>
+          )}
 
           {/* Address Section */}
-          <div>
-            <h3 className="mb-4 text-lg font-bold text-[#0F172A]">Alamat</h3>
+          {activeSection === "address" && (
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+                <label className="mb-2 block text-sm font-semibold">
                   Alamat Lengkap
                 </label>
                 <textarea
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Jl. / Desa / RT / RW"
+                  placeholder="Alamat Lengkap"
                   rows={3}
                   className="input-field"
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Provinsi
-                  </label>
-                  <select
-                    name="provinceId"
-                    value={formData.provinceId}
-                    onChange={handleInputChange}
-                    className="input-field"
-                    required
-                  >
-                    <option value="">Pilih Provinsi</option>
-                    {provinces.map((prov) => (
-                      <option key={prov.id} value={prov.id}>
-                        {prov.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Kota/Kabupaten
-                  </label>
-                  <select
-                    name="cityId"
-                    value={formData.cityId}
-                    onChange={handleInputChange}
-                    className="input-field"
-                    required
-                    disabled={!formData.provinceId}
-                  >
-                    <option value="">Pilih Kota</option>
-                    {filteredCities.map((city) => (
-                      <option key={city.id} value={city.id}>
-                        {city.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Provinsi
+                </label>
+                <select
+                  name="provinceId"
+                  value={formData.provinceId}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  required
+                >
+                  <option value="">Pilih Provinsi</option>
+                  {provinces.map((prov) => (
+                    <option key={prov.id} value={prov.id}>
+                      {prov.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Kecamatan
-                  </label>
-                  <input
-                    type="text"
-                    name="district"
-                    value={formData.district}
-                    onChange={handleInputChange}
-                    placeholder="Kecamatan"
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
-                    Kode Pos
-                  </label>
-                  <input
-                    type="text"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    placeholder="60210"
-                    pattern="[0-9]{5}"
-                    className="input-field"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Kota/Kabupaten
+                </label>
+                <select
+                  name="cityId"
+                  value={formData.cityId}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  required
+                  disabled={!formData.provinceId}
+                >
+                  <option value="">Pilih Kota/Kabupaten</option>
+                  {filteredCities.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Kecamatan
+                </label>
+                <input
+                  type="text"
+                  name="district"
+                  value={formData.district}
+                  onChange={handleInputChange}
+                  placeholder="Kecamatan"
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold">
+                  Kode Pos
+                </label>
+                <input
+                  type="text"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                  placeholder="60210"
+                  pattern="[0-9]{5}"
+                  className="input-field"
+                  required
+                />
               </div>
             </div>
-          </div>
+          )}
 
           {/* Submit Button */}
           <button type="submit" disabled={loading} className="btn-primary mt-8">
-            {loading ? "Memproses..." : "Selesai & Lanjutkan"}
+            {loading ? "Memproses..." : "Selesai"}
           </button>
         </form>
       </div>

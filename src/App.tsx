@@ -12,6 +12,9 @@ import ActivityScreen from "./pages/ActivityScreen";
 import DetailActivityScreen from "./pages/DetailActivityScreen";
 import NotificationsScreen from "./pages/NotificationsScreen";
 import ProfileScreen from "./pages/ProfileScreen";
+import ProgramListScreen from "./pages/ProgramListcreen";
+import TrainingDetailScreen from "./pages/TrainingProgramDetailcreen";
+import ApplyTrainingScreen from "./pages/ApplyTrainingScreen";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -69,6 +72,34 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/programs"
+        element={
+          <ProtectedRoute>
+            <ProgramListScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/program/training/:id"
+        element={
+          <ProtectedRoute>
+            <TrainingDetailScreen />
+          </ProtectedRoute>
+        }
+      />
+      {/* <Route path="/program/certification/:id" element={<ProtectedRoute><CertificationDetailScreen /></ProtectedRoute>} />
+<Route path="/program/funding/:id" element={<ProtectedRoute><FundingDetailScreen /></ProtectedRoute>} /> */}
+      <Route
+        path="/apply/training/:id"
+        element={
+          <ProtectedRoute>
+            <ApplyTrainingScreen />
+          </ProtectedRoute>
+        }
+      />
+      {/* <Route path="/apply/certification/:id" element={<ProtectedRoute><ApplyCertificationScreen /></ProtectedRoute>} />
+<Route path="/apply/funding/:id" element={<ProtectedRoute><ApplyFundingScreen /></ProtectedRoute>} /> */}
       <Route
         path="/activity"
         element={

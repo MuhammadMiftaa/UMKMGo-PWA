@@ -45,21 +45,21 @@ export default function DashboardScreen() {
       label: "Sertifikasi",
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-50",
-      path: "/activity?type=certification",
+      path: "/programs?type=certification",
     },
     {
       icon: BookOpen,
       label: "Pelatihan",
       color: "from-cyan-500 to-cyan-600",
       bgColor: "bg-cyan-50",
-      path: "/activity?type=training",
+      path: "/programs?type=training",
     },
     {
       icon: Banknote,
       label: "Pendanaan",
       color: "from-indigo-500 to-indigo-600",
       bgColor: "bg-indigo-50",
-      path: "/activity?type=funding",
+      path: "/programs?type=funding",
     },
   ];
 

@@ -57,30 +57,31 @@ export default function ApplyTrainingScreen() {
 
   useEffect(() => {
     const stored = localStorage.getItem("userData");
+    let data;
     if (stored) {
-      const data = JSON.parse(stored);
-      setUserData({
-        fullname: data.fullname || "Akbar Chalay",
-        business_name: data.businessName || "PT Semua Teman",
-        nik: data.nik || "1234567890987654",
-        gender: data.gender === "male" ? "Laki-laki" : "Perempuan",
-        birth_date: data.birthDate || "2008-08-06",
-        phone: data.phone || "81234567890",
-        address: data.address || "Jl. Ketintang No. 123",
-        province: "Jawa Timur",
-        city: "Surabaya",
-        district: data.district || "Ketintang",
-        postal_code: data.postalCode || "60210",
-        nib: "1234567890",
-        npwp: "12.345.678.9-012.345",
-        kartu_type: data.kartuType || "Kartu Afirmatif",
-        kartu_number: data.kartuNumber || "1234567890",
-      });
+      data = JSON.parse(stored);
     }
+    setUserData({
+      fullname: data?.fullname || "Akbar Chalay",
+      business_name: data?.businessName || "PT Semua Teman",
+      nik: data?.nik || "1234567890987654",
+      gender: data?.gender === "male" ? "Laki-laki" : "Perempuan",
+      birth_date: data?.birthDate || "2008-08-06",
+      phone: data?.phone || "81234567890",
+      address: data?.address || "Jl. Ketintang No. 123",
+      province: "Jawa Timur",
+      city: "Surabaya",
+      district: data?.district || "Ketintang",
+      postal_code: data?.postalCode || "60210",
+      nib: "-",
+      npwp: "-",
+      kartu_type: data?.kartuType || "Kartu Afirmatif",
+      kartu_number: data?.kartuNumber || "1234567890",
+    });
   }, []);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -88,7 +89,7 @@ export default function ApplyTrainingScreen() {
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: "ktp" | "portfolio"
+    type: "ktp" | "portfolio",
   ) => {
     if (e.target.files && e.target.files[0]) {
       setDocuments((prev) => ({ ...prev, [type]: e.target.files![0] }));
@@ -163,28 +164,48 @@ export default function ApplyTrainingScreen() {
               <div className="mb-4 flex items-center gap-2">
                 <User size={20} className="text-primary" />
                 <h2 className="text-foreground font-bold">Data Pribadi</h2>
-                <span className="text-muted-foreground ml-auto text-xs">(Otomatis dari profil)</span>
+                <span className="text-muted-foreground ml-auto text-xs">
+                  (Otomatis dari profil)
+                </span>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nama Lengkap</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.fullname}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nama Lengkap
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.fullname}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
                   <span className="text-muted-foreground text-sm">NIK</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.nik}</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.nik}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Jenis Kelamin</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.gender}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Jenis Kelamin
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.gender}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Tanggal Lahir</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.birth_date}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Tanggal Lahir
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.birth_date}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground text-sm">Nomor Telepon</span>
-                  <span className="text-foreground text-sm font-semibold">+62{userData.phone}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nomor Telepon
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    +62{userData.phone}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -195,28 +216,46 @@ export default function ApplyTrainingScreen() {
               <div className="mb-4 flex items-center gap-2">
                 <Briefcase size={20} className="text-primary" />
                 <h2 className="text-foreground font-bold">Data Usaha</h2>
-                <span className="text-muted-foreground ml-auto text-xs">(Otomatis dari profil)</span>
+                <span className="text-muted-foreground ml-auto text-xs">
+                  (Otomatis dari profil)
+                </span>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nama Usaha</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.business_name}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nama Usaha
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.business_name}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Kartu UMKM</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.kartu_type}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Kartu UMKM
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.kartu_type}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nomor Kartu</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.kartu_number}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nomor Kartu
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.kartu_number}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
                   <span className="text-muted-foreground text-sm">NIB</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.nib}</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.nib}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground text-sm">NPWP</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.npwp}</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {userData.npwp}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -226,12 +265,17 @@ export default function ApplyTrainingScreen() {
             <CardContent className="p-5">
               <div className="mb-4 flex items-center gap-2">
                 <FileText size={20} className="text-primary" />
-                <h2 className="text-foreground font-bold">Informasi Tambahan</h2>
+                <h2 className="text-foreground font-bold">
+                  Informasi Tambahan
+                </h2>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="motivation">Motivasi Mengikuti Pelatihan <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="motivation">
+                    Motivasi Mengikuti Pelatihan{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <textarea
                     id="motivation"
                     name="motivation"
@@ -244,7 +288,9 @@ export default function ApplyTrainingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="business_experience">Pengalaman Menjalankan Usaha</Label>
+                  <Label htmlFor="business_experience">
+                    Pengalaman Menjalankan Usaha
+                  </Label>
                   <textarea
                     id="business_experience"
                     name="business_experience"
@@ -257,7 +303,9 @@ export default function ApplyTrainingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="learning_objectives">Target/Tujuan Pembelajaran</Label>
+                  <Label htmlFor="learning_objectives">
+                    Target/Tujuan Pembelajaran
+                  </Label>
                   <textarea
                     id="learning_objectives"
                     name="learning_objectives"
@@ -270,7 +318,9 @@ export default function ApplyTrainingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="availability_notes">Catatan Ketersediaan Waktu</Label>
+                  <Label htmlFor="availability_notes">
+                    Catatan Ketersediaan Waktu
+                  </Label>
                   <textarea
                     id="availability_notes"
                     name="availability_notes"
@@ -294,7 +344,9 @@ export default function ApplyTrainingScreen() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>KTP <span className="text-red-500">*</span></Label>
+                  <Label>
+                    KTP <span className="text-red-500">*</span>
+                  </Label>
                   <div className="relative">
                     <input
                       id="ktp"
@@ -313,12 +365,18 @@ export default function ApplyTrainingScreen() {
                         </div>
                         <div>
                           <p className="text-foreground text-sm font-semibold">
-                            {documents.ktp ? documents.ktp.name : "Pilih file KTP"}
+                            {documents.ktp
+                              ? documents.ktp.name
+                              : "Pilih file KTP"}
                           </p>
-                          <p className="text-muted-foreground text-xs">Format: JPG, PNG, PDF (Max 2MB)</p>
+                          <p className="text-muted-foreground text-xs">
+                            Format: JPG, PNG, PDF (Max 2MB)
+                          </p>
                         </div>
                       </div>
-                      {documents.ktp && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                      {documents.ktp && (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      )}
                     </label>
                   </div>
                 </div>
@@ -343,12 +401,18 @@ export default function ApplyTrainingScreen() {
                         </div>
                         <div>
                           <p className="text-foreground text-sm font-semibold">
-                            {documents.portfolio ? documents.portfolio.name : "Pilih file portfolio"}
+                            {documents.portfolio
+                              ? documents.portfolio.name
+                              : "Pilih file portfolio"}
                           </p>
-                          <p className="text-muted-foreground text-xs">Format: JPG, PNG, PDF (Max 5MB)</p>
+                          <p className="text-muted-foreground text-xs">
+                            Format: JPG, PNG, PDF (Max 5MB)
+                          </p>
                         </div>
                       </div>
-                      {documents.portfolio && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                      {documents.portfolio && (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      )}
                     </label>
                   </div>
                 </div>

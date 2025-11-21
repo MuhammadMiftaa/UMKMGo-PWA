@@ -13,8 +13,9 @@ import DetailActivityScreen from "./pages/DetailActivityScreen";
 import NotificationsScreen from "./pages/NotificationsScreen";
 import ProfileScreen from "./pages/ProfileScreen";
 import ProgramListScreen from "./pages/ProgramListcreen";
-import TrainingDetailScreen from "./pages/TrainingProgramDetailcreen";
+import TrainingDetailScreen from "./pages/TrainingProgramDetailScreen";
 import ApplyTrainingScreen from "./pages/ApplyTrainingScreen";
+import CertificationDetailScreen from "./pages/CertificationProgramDetailScreen";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -88,8 +89,15 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* <Route path="/program/certification/:id" element={<ProtectedRoute><CertificationDetailScreen /></ProtectedRoute>} />
-<Route path="/program/funding/:id" element={<ProtectedRoute><FundingDetailScreen /></ProtectedRoute>} /> */}
+      <Route
+        path="/program/certification/:id"
+        element={
+          <ProtectedRoute>
+            <CertificationDetailScreen />
+          </ProtectedRoute>
+        }
+      />
+      {/* <Route path="/program/funding/:id" element={<ProtectedRoute><FundingDetailScreen /></ProtectedRoute>} /> */}
       <Route
         path="/apply/training/:id"
         element={

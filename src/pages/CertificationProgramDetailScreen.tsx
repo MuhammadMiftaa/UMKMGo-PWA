@@ -213,28 +213,6 @@ export default function CertificationDetailScreen() {
           </CardContent>
         </Card>
 
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <Target size={20} className="text-primary" />
-              Proses Sertifikasi
-            </h3>
-            <div className="space-y-4">
-              {program.process_steps.map((step, index) => (
-                <div key={index} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <span className="bg-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">{index + 1}</span>
-                    {index < program.process_steps.length - 1 && <div className="mt-2 h-full w-0.5 bg-blue-200" />}
-                  </div>
-                  <div className="flex-1 pb-4">
-                    <p className="text-foreground font-semibold text-sm">{step}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="mb-6 border-2 border-red-100 bg-linear-to-br from-red-50/50 to-orange-50/50">
           <CardContent className="p-5">
             <div className="flex items-start gap-3">

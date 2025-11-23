@@ -247,27 +247,6 @@ export default function FundingDetailScreen() {
         <Card className="mb-6 border-blue-100">
           <CardContent className="p-5">
             <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <Shield size={20} className="text-primary" />
-              Tujuan Pendanaan yang Diperbolehkan
-            </h3>
-            <ol className="space-y-3">
-              {program.funding_purposes.map((purpose, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-                    {index + 1}
-                  </span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
-                    {purpose}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
               <Award size={20} className="text-primary" />
               Keuntungan Program
             </h3>

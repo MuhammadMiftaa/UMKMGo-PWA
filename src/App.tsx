@@ -19,6 +19,7 @@ import CertificationDetailScreen from "./pages/CertificationProgramDetailScreen"
 import FundingDetailScreen from "./pages/FundingDetailScreen";
 import ApplyCertificationScreen from "./pages/ApplyCertificationScreen";
 import ApplyFundingScreen from "./pages/ApplyFundingScreen";
+import EditProfileScreen from "./pages/EditProfileScreen";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -161,6 +162,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfileScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/edit"
+        element={
+          <ProtectedRoute>
+            <EditProfileScreen />
           </ProtectedRoute>
         }
       />

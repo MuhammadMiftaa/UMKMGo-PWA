@@ -1,0 +1,501 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { Card, CardContent } from "../components/ui/Card";
+import {
+  ArrowLeft,
+  User,
+  MapPin,
+  Briefcase,
+  Save,
+  AlertCircle,
+  Camera,
+  CheckCircle2,
+} from "lucide-react";
+
+interface ProfileData {
+  fullname: string;
+  nik: string;
+  gender: string;
+  birthDate: string;
+  email: string;
+  phone: string;
+  businessName: string;
+  kartuType: string;
+  kartuNumber: string;
+  address: string;
+  provinceId: string;
+  cityId: string;
+  district: string;
+  postalCode: string;
+}
+
+export default function EditProfileScreen() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const [formData, setFormData] = useState<ProfileData>({
+    fullname: "",
+    nik: "",
+    gender: "",
+    birthDate: "",
+    email: "",
+    phone: "",
+    businessName: "",
+    kartuType: "",
+    kartuNumber: "",
+    address: "",
+    provinceId: "",
+    cityId: "",
+    district: "",
+    postalCode: "",
+  });
+
+  const [provinces] = useState([
+    { id: "32", name: "JAWA BARAT" },
+    { id: "35", name: "JAWA TIMUR" },
+    { id: "31", name: "DKI JAKARTA" },
+  ]);
+
+  const [cities] = useState([
+    { id: "3273", name: "KOTA BANDUNG", province_id: "32" },
+    { id: "3578", name: "KOTA SURABAYA", province_id: "35" },
+    { id: "3172", name: "JAKARTA PUSAT", province_id: "31" },
+  ]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("userData");
+    if (stored) {
+      const data = JSON.parse(stored);
+      setFormData({
+        fullname: data.fullname || "Akbar Chalay",
+        nik: data.nik || "1234567890987654",
+        gender: data.gender === "Laki-laki" ? "male" : "female",
+        birthDate: data.birthDate || "2008-08-06",
+        email: data.email || "akbar@email.com",
+        phone: data.phone || "81234567890",
+        businessName: data.businessName || "PT Semua Teman",
+        kartuType: data.kartuType || "Kartu Afirmatif",
+        kartuNumber: data.kartuNumber || "1234567890",
+        address: data.address || "Jl. Ketintang No. 123",
+        provinceId: "35",
+        cityId: "3578",
+        district: data.district || "Ketintang",
+        postalCode: data.postalCode || "60210",
+      });
+    }
+  }, []);
+
+  const filteredCities = cities.filter(
+    (city) => city.province_id === formData.provinceId,
+  );
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    setLoading(true);
+    setError("");
+    setSuccess(false);
+
+    // Validation
+    if (!formData.fullname.trim()) {
+      setError("Nama lengkap harus diisi");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.nik || formData.nik.length !== 16) {
+      setError("NIK harus 16 digit");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.businessName.trim()) {
+      setError("Nama usaha harus diisi");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.address.trim()) {
+      setError("Alamat harus diisi");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.postalCode || formData.postalCode.length !== 5) {
+      setError("Kode pos harus 5 digit");
+      setLoading(false);
+      return;
+    }
+
+    setTimeout(() => {
+      const dataToSave = {
+        ...formData,
+        gender: formData.gender === "male" ? "Laki-laki" : "Perempuan",
+      };
+      localStorage.setItem("userData", JSON.stringify(dataToSave));
+
+      setSuccess(true);
+      setLoading(false);
+
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white pb-24">
+      <div className="from-primary via-accent to-secondary relative overflow-hidden bg-linear-to-br px-6 py-8 pb-20">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <button
+          onClick={() => navigate("/profile")}
+          className="relative z-10 mb-6 flex items-center gap-2 text-white/90 transition-colors hover:text-white"
+        >
+          <ArrowLeft size={20} />
+          <span className="text-sm font-medium">Kembali</span>
+        </button>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white">Edit Profil</h1>
+          <p className="mt-2 text-white/80">Perbarui informasi akun Anda</p>
+        </div>
+      </div>
+
+      <div className="relative z-20 -mt-12 px-6">
+        <Card className="border-2 border-blue-100 bg-white shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <div className="from-primary via-accent to-secondary flex h-24 w-24 items-center justify-center rounded-2xl bg-linear-to-br text-4xl font-bold text-white">
+                  {formData.fullname.charAt(0)}
+                </div>
+                <button className="absolute -right-2 -bottom-2 flex h-10 w-10 items-center justify-center rounded-xl border-2 border-blue-100 bg-white shadow-lg transition-transform hover:scale-110">
+                  <Camera size={18} className="text-primary" />
+                </button>
+              </div>
+              <p className="text-muted-foreground mt-3 text-sm">
+                Klik untuk ubah foto profil
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6 px-6">
+        <div className="space-y-6">
+          {success && (
+            <Card className="border-2 border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <p className="text-sm font-semibold text-green-600">
+                    Profil berhasil diperbarui!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {error && (
+            <Card className="border-2 border-red-200 bg-red-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="border-blue-100">
+            <CardContent className="p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <User size={20} className="text-primary" />
+                <h2 className="text-foreground font-bold">Data Pribadi</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullname">Nama Lengkap</Label>
+                  <Input
+                    id="fullname"
+                    name="fullname"
+                    value={formData.fullname}
+                    onChange={handleInputChange}
+                    placeholder="Nama lengkap sesuai KTP"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nik">NIK (16 digit)</Label>
+                  <Input
+                    id="nik"
+                    name="nik"
+                    value={formData.nik}
+                    maxLength={16}
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Jenis Kelamin</Label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                  >
+                    <option value="">Pilih</option>
+                    <option value="male">Laki-laki</option>
+                    <option value="female">Perempuan</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="birthDate">Tanggal Lahir</Label>
+                  <Input
+                    id="birthDate"
+                    name="birthDate"
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Email tidak dapat diubah
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Nomor WhatsApp</Label>
+                  <div className="flex gap-2">
+                    <div className="border-border bg-muted text-muted-foreground flex h-12 items-center rounded-xl border-2 px-4 font-semibold">
+                      +62
+                    </div>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      disabled
+                      className="bg-muted flex-1 cursor-not-allowed"
+                    />
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    Nomor WhatsApp tidak dapat diubah
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-100">
+            <CardContent className="p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Briefcase size={20} className="text-primary" />
+                <h2 className="text-foreground font-bold">Data Usaha</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="businessName">Nama Usaha</Label>
+                  <Input
+                    id="businessName"
+                    name="businessName"
+                    value={formData.businessName}
+                    onChange={handleInputChange}
+                    placeholder="Nama usaha Anda"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kartuType">Jenis Kartu UMKM</Label>
+                  <Input
+                    id="kartuType"
+                    name="kartuType"
+                    value={formData.kartuType}
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Jenis kartu tidak dapat diubah
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kartuNumber">Nomor Kartu</Label>
+                  <Input
+                    id="kartuNumber"
+                    name="kartuNumber"
+                    value={formData.kartuNumber}
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Nomor kartu tidak dapat diubah
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-100">
+            <CardContent className="p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <MapPin size={20} className="text-primary" />
+                <h2 className="text-foreground font-bold">Alamat</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Alamat Lengkap</Label>
+                  <textarea
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Jalan, RT/RW, Kelurahan"
+                    rows={3}
+                    className="border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary/10 flex w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="provinceId">Provinsi</Label>
+                  <select
+                    id="provinceId"
+                    name="provinceId"
+                    value={formData.provinceId}
+                    onChange={handleInputChange}
+                    className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                  >
+                    <option value="">Pilih</option>
+                    {provinces.map((prov) => (
+                      <option key={prov.id} value={prov.id}>
+                        {prov.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cityId">Kota/Kab</Label>
+                  <select
+                    id="cityId"
+                    name="cityId"
+                    value={formData.cityId}
+                    onChange={handleInputChange}
+                    className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
+                    disabled={!formData.provinceId}
+                  >
+                    <option value="">Pilih</option>
+                    {filteredCities.map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="district">Kecamatan</Label>
+                  <Input
+                    id="district"
+                    name="district"
+                    value={formData.district}
+                    onChange={handleInputChange}
+                    placeholder="Kecamatan"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Kode Pos</Label>
+                  <Input
+                    id="postalCode"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleInputChange}
+                    placeholder="60210"
+                    maxLength={5}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 h-5 w-5 text-blue-600" />
+                <div className="flex-1">
+                  <p className="text-foreground text-sm font-semibold">
+                    Perhatian
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Email, nomor WhatsApp, jenis kartu, dan nomor kartu tidak
+                    dapat diubah. Untuk mengubah data tersebut, silakan hubungi
+                    customer service.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-3 pb-4">
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              variant="gradient"
+              size="lg"
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={20} />
+                  <span>Simpan Perubahan</span>
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={() => navigate("/profile")}
+              variant="outline"
+              size="lg"
+              className="w-full border-2"
+            >
+              Batal
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

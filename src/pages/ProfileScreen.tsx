@@ -100,35 +100,6 @@ export default function ProfileScreen() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="mt-6 px-6">
-        <div className="grid grid-cols-2 gap-3">
-          <button className="group">
-            <Card className="border-blue-100 transition-all hover:scale-105 hover:shadow-lg">
-              <CardContent className="p-4">
-                <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-100 to-blue-50">
-                  <Edit className="text-primary h-6 w-6" />
-                </div>
-                <p className="text-foreground text-sm font-semibold">
-                  Edit Profil
-                </p>
-              </CardContent>
-            </Card>
-          </button>
-
-          <button className="group">
-            <Card className="border-blue-100 transition-all hover:scale-105 hover:shadow-lg">
-              <CardContent className="p-4">
-                <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-green-100 to-green-50">
-                  <FileText className="h-6 w-6 text-green-600" />
-                </div>
-                <p className="text-foreground text-sm font-semibold">Dokumen</p>
-              </CardContent>
-            </Card>
-          </button>
-        </div>
-      </div>
-
       {/* Sections */}
       <div className="mt-6 space-y-4 px-6">
         {/* Personal Data */}
@@ -182,6 +153,7 @@ export default function ProfileScreen() {
               <ChevronRight className="text-muted-foreground h-5 w-5" />
             </div>
             <div className="p-4">
+              <InfoRow label="Nama Usaha" value={userData.businessName} />
               <InfoRow label="Jenis Kartu" value={userData.kartuType} />
               <InfoRow label="Nomor Kartu" value={userData.kartuNumber} />
             </div>
@@ -219,7 +191,12 @@ export default function ProfileScreen() {
 
         {/* Action Buttons */}
         <div className="space-y-3 pb-4">
-          <Button variant="gradient" size="lg" className="w-full">
+          <Button
+            variant="gradient"
+            size="lg"
+            className="w-full"
+            onClick={() => navigate("/profile/edit")}
+          >
             <Edit size={20} />
             <span>Edit Profile</span>
           </Button>

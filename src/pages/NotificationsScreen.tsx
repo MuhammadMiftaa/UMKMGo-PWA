@@ -20,6 +20,7 @@ interface Notification {
   message: string;
   created_at: string;
   is_read: boolean;
+  application_id?: number; // Add application_id field
 }
 
 export default function NotificationsScreen() {
@@ -33,6 +34,7 @@ export default function NotificationsScreen() {
         "Pengajuan Anda untuk Pelatihan Digital Marketing telah disetujui",
       created_at: "2025-11-18 09:30:00",
       is_read: false,
+      application_id: 1, // Add application_id
     },
     {
       id: 2,
@@ -42,6 +44,7 @@ export default function NotificationsScreen() {
         "Pengajuan Anda memerlukan revisi. Silakan periksa detail aplikasi.",
       created_at: "2025-11-17 15:00:00",
       is_read: false,
+      application_id: 2, // Add application_id
     },
     {
       id: 3,
@@ -50,6 +53,7 @@ export default function NotificationsScreen() {
       message: "Pengajuan Anda sedang dalam tahap screening",
       created_at: "2025-11-16 11:20:00",
       is_read: true,
+      application_id: 3, // Add application_id
     },
     {
       id: 4,
@@ -58,6 +62,17 @@ export default function NotificationsScreen() {
       message: "Pengajuan Anda untuk Sertifikasi ISO 9001 ditolak",
       created_at: "2025-11-15 14:00:00",
       is_read: true,
+      application_id: 4, // Add application_id
+    },
+    {
+      id: 5,
+      type: "screening_rejected",
+      title: "Pengajuan Ditolak pada Tahap Screening",
+      message:
+        "Pengajuan Anda telah ditolak pada tahap screening. Karena Data tidak lengkap. Silakan periksa kembali data yang Anda kirim.",
+      created_at: "2025-11-21 07:13:16",
+      is_read: false,
+      application_id: 30, // Add application_id
     },
   ]);
 
@@ -120,6 +135,21 @@ export default function NotificationsScreen() {
     });
   };
 
+  const handleNotificationClick = (notif: Notification) => {
+    // Mark notification as read
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n)),
+    );
+
+    // Navigate to detail activity if application_id exists
+    if (notif.application_id) {
+      navigate(`/activity/${notif.application_id}`);
+    } else {
+      // Fallback to activity page if no application_id
+      navigate("/activity");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white pb-24">
       {/* Header */}
@@ -174,7 +204,7 @@ export default function NotificationsScreen() {
               return (
                 <button
                   key={notif.id}
-                  onClick={() => navigate("/activity")}
+                  onClick={() => handleNotificationClick(notif)}
                   className="w-full text-left"
                 >
                   <Card

@@ -11,7 +11,6 @@ import {
   User,
   MapPin,
   Briefcase,
-  FileText,
   Edit,
   ChevronRight,
 } from "lucide-react";

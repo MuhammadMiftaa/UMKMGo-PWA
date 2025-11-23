@@ -13,7 +13,6 @@ import {
   Building2,
   AlertCircle,
   TrendingUp,
-  Shield,
 } from "lucide-react";
 
 interface Program {

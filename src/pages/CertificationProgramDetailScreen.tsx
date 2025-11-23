@@ -12,7 +12,6 @@ import {
   Building2,
   AlertCircle,
   Shield,
-  Target,
 } from "lucide-react";
 
 interface Program {

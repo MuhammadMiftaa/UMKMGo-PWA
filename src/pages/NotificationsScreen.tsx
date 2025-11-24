@@ -10,6 +10,8 @@ import {
   XCircle,
   Bell,
   CheckCheck,
+  Send,
+  FileCheck,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 
@@ -28,51 +30,63 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: 1,
-      type: "approved",
-      title: "Pengajuan Disetujui",
+      type: "final_approved",
+      title: "Pengajuan Disetujui Final",
       message:
-        "Pengajuan Anda untuk Pelatihan Digital Marketing telah disetujui",
-      created_at: "2025-11-18 09:30:00",
+        "Selamat! Pengajuan Anda untuk Pelatihan Digital Marketing telah disetujui secara final",
+      created_at: "2025-11-24 09:30:00",
       is_read: false,
-      application_id: 1, // Add application_id
+      application_id: 1,
     },
     {
       id: 2,
-      type: "revision",
-      title: "Perlu Revisi",
+      type: "screening_revised",
+      title: "Perlu Revisi Dokumen",
       message:
-        "Pengajuan Anda memerlukan revisi. Silakan periksa detail aplikasi.",
-      created_at: "2025-11-17 15:00:00",
+        "Dokumen pengajuan Anda perlu direvisi. Silakan periksa komentar pada detail aplikasi.",
+      created_at: "2025-11-23 15:00:00",
       is_read: false,
-      application_id: 2, // Add application_id
+      application_id: 2,
     },
     {
       id: 3,
-      type: "screening",
-      title: "Sedang Diproses",
-      message: "Pengajuan Anda sedang dalam tahap screening",
-      created_at: "2025-11-16 11:20:00",
-      is_read: true,
-      application_id: 3, // Add application_id
+      type: "screening_approved",
+      title: "Lolos Tahap Screening",
+      message:
+        "Pengajuan Anda telah lolos tahap screening dan akan diproses lebih lanjut",
+      created_at: "2025-11-22 11:20:00",
+      is_read: false,
+      application_id: 3,
     },
     {
       id: 4,
-      type: "rejected",
+      type: "final_rejected",
       title: "Pengajuan Ditolak",
-      message: "Pengajuan Anda untuk Sertifikasi ISO 9001 ditolak",
-      created_at: "2025-11-15 14:00:00",
+      message:
+        "Pengajuan Anda untuk Sertifikasi ISO 9001 tidak dapat disetujui pada tahap final",
+      created_at: "2025-11-21 14:00:00",
       is_read: true,
-      application_id: 4, // Add application_id
+      application_id: 4,
     },
     {
       id: 5,
       type: "screening_rejected",
-      title: "Pengajuan Ditolak pada Tahap Screening",
+      title: "Ditolak pada Tahap Screening",
       message:
-        "Pengajuan Anda telah ditolak pada tahap screening. Karena Data tidak lengkap. Silakan periksa kembali data yang Anda kirim.",
+        "Pengajuan Anda tidak lolos tahap screening. Data tidak lengkap, silakan periksa kembali.",
       created_at: "2025-11-21 07:13:16",
-      is_read: false,
-      application_id: 30, // Add application_id
+      is_read: true,
+      application_id: 5,
+    },
+    {
+      id: 6,
+      type: "application_submitted",
+      title: "Pengajuan Berhasil Dikirim",
+      message:
+        "Pengajuan Anda telah diterima dan akan segera diproses oleh tim kami",
+      created_at: "2025-11-20 10:45:00",
+      is_read: true,
+      application_id: 6,
     },
   ]);
 
@@ -88,25 +102,35 @@ export default function NotificationsScreen() {
     const icons: {
       [key: string]: { icon: React.ReactNode; color: string; bg: string };
     } = {
-      approved: {
-        icon: <CheckCircle2 size={24} />,
+      application_submitted: {
+        icon: <Send size={24} />,
+        color: "text-blue-600",
+        bg: "bg-blue-100",
+      },
+      screening_approved: {
+        icon: <FileCheck size={24} />,
         color: "text-green-600",
         bg: "bg-green-100",
       },
-      revision: {
+      screening_rejected: {
+        icon: <XCircle size={24} />,
+        color: "text-red-600",
+        bg: "bg-red-100",
+      },
+      screening_revised: {
         icon: <AlertCircle size={24} />,
         color: "text-amber-600",
         bg: "bg-amber-100",
       },
-      screening: {
-        icon: <Clock size={24} />,
-        color: "text-blue-600",
-        bg: "bg-blue-100",
+      final_approved: {
+        icon: <CheckCircle2 size={24} />,
+        color: "text-emerald-600",
+        bg: "bg-emerald-100",
       },
-      rejected: {
+      final_rejected: {
         icon: <XCircle size={24} />,
-        color: "text-red-600",
-        bg: "bg-red-100",
+        color: "text-rose-600",
+        bg: "bg-rose-100",
       },
     };
     return (

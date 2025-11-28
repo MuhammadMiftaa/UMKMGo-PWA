@@ -350,52 +350,6 @@ export default function DashboardScreen() {
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <div className="mt-8 px-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-foreground text-lg font-bold">
-            Aktivitas Terbaru
-          </h3>
-          <button
-            onClick={() => navigate("/activity")}
-            className="text-primary text-sm font-semibold hover:underline"
-          >
-            Lihat Semua
-          </button>
-        </div>
-        <div className="space-y-3">
-          {[1, 2].map((item) => (
-            <Card
-              key={item}
-              className="border-blue-100 transition-shadow hover:shadow-md"
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-blue-100 p-2">
-                      <BookOpen className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-foreground font-semibold">
-                        Pelatihan Digital Marketing
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        2 hari lalu
-                      </p>
-                    </div>
-                  </div>
-                  <div className="rounded-full bg-green-100 px-3 py-1">
-                    <p className="text-xs font-semibold text-green-700">
-                      Disetujui
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
       {/* Recent News */}
       <div className="mt-8 px-6">
         <div className="mb-4 flex items-center justify-between">

@@ -12,6 +12,8 @@ import {
   TrendingUp,
   ArrowRight,
   Sparkles,
+  Eye,
+  Calendar,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 
@@ -21,9 +23,22 @@ interface UserData {
   kartuNumber: string;
 }
 
+interface News {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  thumbnail: string;
+  category: string;
+  author_name: string;
+  views_count: number;
+  created_at: string;
+}
+
 export default function DashboardScreen() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [recentNews, setRecentNews] = useState<News[]>([]);
   const [unreadCount] = useState(3);
 
   useEffect(() => {
@@ -37,7 +52,124 @@ export default function DashboardScreen() {
         kartuNumber: "1234567890",
       });
     }
+
+    fetchRecentNews();
   }, []);
+
+  const fetchRecentNews = async () => {
+    try {
+      // Replace with actual API call
+      // const response = await fetch(`${API_BASE_URL}/mobile/news?limit=5`);
+      // const data = await response.json();
+
+      // Mock data for now - 5 berita terbaru
+      const mockNews: News[] = [
+        {
+          id: 1,
+          title: "Kisah Sukses: Dari Warung Kecil hingga Ekspor ke 5 Negara",
+          slug: "kisah-sukses-dari-warung-kecil-hingga-ekspor-ke-5-negara",
+          excerpt:
+            "Pak Budi berhasil mengembangkan usaha keripik singkongnya dari warung kecil hingga ekspor ke 5 negara",
+          thumbnail:
+            "https://storage.miftech.web.id/umkmgo-news/kisah_sukses:_dari_warung_kecil_hingga_ekspor_ke_5_negara/news_thumbnail___1764342206.png",
+          category: "success_story",
+          author_name: "Super Admin",
+          views_count: 1250,
+          created_at: "2025-11-28 15:03:32",
+        },
+        {
+          id: 2,
+          title: "Expo UMKM Jakarta 2025 - Pameran Produk Lokal Terbesar",
+          slug: "expo-umkm-jakarta-2025-pameran-produk-lokal-terbesar",
+          excerpt:
+            "Kami mengundang seluruh pelaku UMKM untuk berpartisipasi dalam Expo UMKM Jakarta 2025",
+          thumbnail:
+            "http://127.0.0.1:9000/umkmgo-programs/expo_umkm_jakarta_2025_-_pameran_produk_lokal_terbesar/news_thumbnail___1764337504.png",
+          category: "event",
+          author_name: "Super Admin",
+          views_count: 850,
+          created_at: "2025-11-28 20:45:04",
+        },
+        {
+          id: 3,
+          title: "Tips Digital Marketing untuk UMKM Pemula",
+          slug: "tips-digital-marketing-untuk-umkm-pemula",
+          excerpt:
+            "Pelajari strategi digital marketing yang efektif untuk meningkatkan penjualan online Anda",
+          thumbnail:
+            "https://via.placeholder.com/400x200/0077B6/FFFFFF?text=Digital+Marketing",
+          category: "tips",
+          author_name: "Marketing Team",
+          views_count: 2100,
+          created_at: "2025-11-27 10:30:00",
+        },
+        {
+          id: 4,
+          title: "Kebijakan Baru Pemerintah untuk UMKM 2025",
+          slug: "kebijakan-baru-pemerintah-untuk-umkm-2025",
+          excerpt:
+            "Pemerintah meluncurkan kebijakan baru yang memberikan kemudahan akses pembiayaan bagi UMKM",
+          thumbnail:
+            "https://via.placeholder.com/400x200/00B4D8/FFFFFF?text=Kebijakan+Baru",
+          category: "news",
+          author_name: "News Editor",
+          views_count: 1750,
+          created_at: "2025-11-26 14:20:00",
+        },
+        {
+          id: 5,
+          title: "Cara Mendapatkan Sertifikat Halal untuk Produk UMKM",
+          slug: "cara-mendapatkan-sertifikat-halal-untuk-produk-umkm",
+          excerpt:
+            "Panduan lengkap proses pengajuan dan persyaratan sertifikasi halal untuk produk makanan",
+          thumbnail:
+            "https://via.placeholder.com/400x200/0096C7/FFFFFF?text=Sertifikat+Halal",
+          category: "guide",
+          author_name: "Admin Content",
+          views_count: 980,
+          created_at: "2025-11-25 09:15:00",
+        },
+      ];
+
+      setRecentNews(mockNews);
+    } catch (error) {
+      console.error("Error fetching recent news:", error);
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const labels: { [key: string]: { label: string; color: string } } = {
+      success_story: {
+        label: "Kisah Sukses",
+        color: "bg-green-100 text-green-700",
+      },
+      event: { label: "Event", color: "bg-purple-100 text-purple-700" },
+      tips: { label: "Tips", color: "bg-blue-100 text-blue-700" },
+      news: { label: "Berita", color: "bg-orange-100 text-orange-700" },
+      guide: { label: "Panduan", color: "bg-indigo-100 text-indigo-700" },
+    };
+    return (
+      labels[category] || {
+        label: category,
+        color: "bg-gray-100 text-gray-700",
+      }
+    );
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatViewCount = (count: number) => {
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  };
 
   const menuItems = [
     {
@@ -261,6 +393,69 @@ export default function DashboardScreen() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+
+      {/* Recent News */}
+      <div className="mt-8 px-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-foreground text-lg font-bold">Berita Terbaru</h3>
+          <button
+            onClick={() => navigate("/news")}
+            className="text-primary text-sm font-semibold hover:underline"
+          >
+            Lihat Semua
+          </button>
+        </div>
+        <div className="space-y-3">
+          {recentNews.map((item) => {
+            const categoryInfo = getCategoryLabel(item.category);
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(`/news/${item.slug}`)}
+                className="w-full text-left"
+              >
+                <Card className="border-blue-100 transition-all hover:scale-[1.01] hover:shadow-md">
+                  <CardContent className="p-0">
+                    <div className="flex gap-3 p-3">
+                      <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg">
+                        <img
+                          src={item.thumbnail}
+                          alt={item.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col justify-between">
+                        <div>
+                          <div className="mb-1">
+                            <span
+                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${categoryInfo.color}`}
+                            >
+                              {categoryInfo.label}
+                            </span>
+                          </div>
+                          <h4 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold">
+                            {item.title}
+                          </h4>
+                        </div>
+                        <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={12} />
+                            <span>{formatDate(item.created_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye size={12} />
+                            <span>{formatViewCount(item.views_count)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            );
+          })}
         </div>
       </div>
 

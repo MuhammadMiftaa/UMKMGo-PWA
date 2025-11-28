@@ -753,7 +753,7 @@ export default function DetailActivityScreen() {
                       <p className="text-muted-foreground mb-1 text-sm font-medium">
                         Jumlah Dana
                       </p>
-                      <p className="text-foreground text-lg font-bold text-green-600">
+                      <p className="text-lg font-bold text-green-600">
                         {formatCurrency(
                           (application as FundingApplication).formData
                             .requested_amount,
@@ -927,7 +927,7 @@ export default function DetailActivityScreen() {
         </div>
 
         {/* Action Button - Only show if status is revise */}
-        {application.status === "revise" && (
+        {application.status === "revised" && (
           <div className="mt-8">
             <Button
               variant="gradient"

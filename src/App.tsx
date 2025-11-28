@@ -20,6 +20,9 @@ import FundingDetailScreen from "./pages/FundingDetailScreen";
 import ApplyCertificationScreen from "./pages/ApplyCertificationScreen";
 import ApplyFundingScreen from "./pages/ApplyFundingScreen";
 import EditProfileScreen from "./pages/EditProfileScreen";
+import NewsListScreen from "./pages/NewsListScreen";
+import DetailNewsScreen from "./pages/DetailNewsScreen";
+import ReviseApplicationScreen from "./pages/ReviseApplicationScreen";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -150,6 +153,14 @@ function App() {
         }
       />
       <Route
+        path="/activity/:id/revise"
+        element={
+          <ProtectedRoute>
+            <ReviseApplicationScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/notifications"
         element={
           <ProtectedRoute>
@@ -170,6 +181,22 @@ function App() {
         element={
           <ProtectedRoute>
             <EditProfileScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/news"
+        element={
+          <ProtectedRoute>
+            <NewsListScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/news/:slug"
+        element={
+          <ProtectedRoute>
+            <DetailNewsScreen />
           </ProtectedRoute>
         }
       />

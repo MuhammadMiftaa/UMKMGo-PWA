@@ -17,15 +17,7 @@ interface Document {
   id: number;
   type: string;
   file: string | File;
-  fileName?: string;
-  needsRevision?: boolean;
-}
-
-interface RevisionNote {
-  id: number;
-  notes: string;
-  actioned_at: string;
-  actioned_by_name: string;
+  fileName: string;
 }
 
 interface Application {
@@ -37,13 +29,13 @@ interface Application {
     type: "training" | "certification" | "funding";
   };
   documents: Document[];
-  revisionNotes: RevisionNote[];
+  revisionNote: string;
 }
 
 export default function ReviseApplicationScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<Application | null>(null);
   const [documents, setDocuments] = useState<{ [key: string]: File | null }>(
     {},
@@ -62,32 +54,23 @@ export default function ReviseApplicationScreen() {
           type: "training",
         },
         documents: [
-          { id: 1, type: "KTP", file: "ktp.pdf", needsRevision: true },
-          { id: 2, type: "NIB", file: "nib.pdf", needsRevision: false },
-          { id: 3, type: "NPWP", file: "npwp.pdf", needsRevision: false },
+          { id: 1, type: "KTP", file: "ktp.pdf", fileName: "ktp_john_doe.pdf" },
+          { id: 2, type: "NIB", file: "nib.pdf", fileName: "nib_john_doe.pdf" },
+          {
+            id: 3,
+            type: "NPWP",
+            file: "npwp.pdf",
+            fileName: "npwp_john_doe.pdf",
+          },
           {
             id: 4,
             type: "Portfolio",
             file: "portfolio.pdf",
-            needsRevision: true,
+            fileName: "portfolio_bisnis.pdf",
           },
         ],
-        revisionNotes: [
-          {
-            id: 1,
-            notes:
-              "Mohon perbaiki dokumen KTP, gambar kurang jelas dan tidak terbaca dengan baik",
-            actioned_at: "2025-11-18 10:00:00",
-            actioned_by_name: "Admin Screening",
-          },
-          {
-            id: 2,
-            notes:
-              "Dokumen portfolio perlu dilengkapi dengan foto produk yang lebih detail",
-            actioned_at: "2025-11-18 10:00:00",
-            actioned_by_name: "Admin Screening",
-          },
-        ],
+        revisionNote:
+          "Mohon perbaiki dokumen KTP karena gambar kurang jelas dan tidak terbaca dengan baik. Dokumen portfolio juga perlu dilengkapi dengan foto produk yang lebih detail dan berkualitas tinggi.",
       };
 
       setApplication(mockApplication);
@@ -115,18 +98,11 @@ export default function ReviseApplicationScreen() {
     setLoading(true);
     setError("");
 
-    // Validate that all documents needing revision have been uploaded
-    const docsNeedingRevision = application?.documents.filter(
-      (doc) => doc.needsRevision,
-    );
-    const missingDocs = docsNeedingRevision?.filter(
-      (doc) => !documents[doc.type],
-    );
+    // Check if at least one document has been uploaded
+    const hasUploadedDoc = Object.values(documents).some((doc) => doc !== null);
 
-    if (missingDocs && missingDocs.length > 0) {
-      setError(
-        `Dokumen yang perlu direvisi belum lengkap: ${missingDocs.map((d) => d.type).join(", ")}`,
-      );
+    if (!hasUploadedDoc) {
+      setError("Minimal satu dokumen harus diupload untuk melakukan revisi");
       setLoading(false);
       return;
     }
@@ -181,49 +157,19 @@ export default function ReviseApplicationScreen() {
             </Card>
           )}
 
-          {/* Revision Notes Section */}
+          {/* Revision Note Section */}
           <Card className="border-2 border-orange-200 bg-orange-50">
             <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-orange-600" />
                 <h2 className="text-foreground font-bold">
                   Catatan Revisi dari Admin
                 </h2>
               </div>
-              <div className="space-y-3">
-                {application.revisionNotes.map((note, idx) => (
-                  <div
-                    key={note.id}
-                    className="rounded-lg border border-orange-200 bg-white p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-600">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-foreground text-sm font-medium">
-                          {note.notes}
-                        </p>
-                        <div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
-                          <span>{note.actioned_by_name}</span>
-                          <span>•</span>
-                          <span>
-                            {new Date(note.actioned_at).toLocaleDateString(
-                              "id-ID",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="rounded-lg border border-orange-200 bg-white p-4">
+                <p className="text-foreground text-sm leading-relaxed">
+                  {application.revisionNote}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -239,17 +185,21 @@ export default function ReviseApplicationScreen() {
                   </p>
                   <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-4 text-xs">
                     <li>
-                      Upload ulang dokumen yang ditandai dengan label "Perlu
-                      Revisi"
+                      Baca dengan teliti catatan revisi dari admin di atas
                     </li>
                     <li>
-                      Pastikan dokumen yang diupload jelas dan sesuai dengan
+                      Upload ulang dokumen yang perlu diperbaiki sesuai dengan
                       catatan revisi
                     </li>
-                    <li>Format file: JPG, PNG, atau PDF (Max 5MB per file)</li>
                     <li>
-                      Dokumen yang tidak perlu revisi tidak perlu diupload ulang
+                      Anda dapat mengupload ulang semua dokumen atau hanya
+                      dokumen tertentu yang perlu direvisi
                     </li>
+                    <li>
+                      Pastikan dokumen yang diupload jelas, berkualitas baik,
+                      dan mudah terbaca
+                    </li>
+                    <li>Format file: JPG, PNG, atau PDF (Max 5MB per file)</li>
                   </ul>
                 </div>
               </div>
@@ -269,17 +219,9 @@ export default function ReviseApplicationScreen() {
                   <div key={doc.id} className="space-y-2">
                     <Label className="flex items-center gap-2">
                       {doc.type}
-                      {doc.needsRevision ? (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-orange-600">
-                          <AlertTriangle size={14} />
-                          Perlu Revisi
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
-                          <CheckCircle2 size={14} />
-                          Sudah Sesuai
-                        </span>
-                      )}
+                      <span className="text-muted-foreground text-xs font-normal">
+                        (File saat ini: {doc.fileName})
+                      </span>
                     </Label>
 
                     <div className="relative">
@@ -289,52 +231,29 @@ export default function ReviseApplicationScreen() {
                         accept="image/*,.pdf"
                         onChange={(e) => handleFileChange(e, doc.type)}
                         className="hidden"
-                        disabled={!doc.needsRevision}
                       />
                       <label
                         htmlFor={`doc-${doc.id}`}
-                        className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all ${
-                          doc.needsRevision
-                            ? "cursor-pointer border-orange-200 bg-orange-50/30 hover:border-orange-300 hover:bg-orange-50"
-                            : "cursor-not-allowed border-green-200 bg-green-50/30 opacity-60"
-                        }`}
+                        className="flex cursor-pointer items-center justify-between rounded-xl border-2 border-blue-200 bg-blue-50/30 p-4 transition-all hover:border-blue-300 hover:bg-blue-50"
                       >
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`rounded-xl p-2 ${
-                              doc.needsRevision
-                                ? "bg-orange-100"
-                                : "bg-green-100"
-                            }`}
-                          >
-                            <Upload
-                              size={20}
-                              className={
-                                doc.needsRevision
-                                  ? "text-orange-600"
-                                  : "text-green-600"
-                              }
-                            />
+                          <div className="rounded-xl bg-blue-100 p-2">
+                            <Upload size={20} className="text-blue-600" />
                           </div>
                           <div>
                             <p className="text-foreground text-sm font-semibold">
                               {documents[doc.type]
                                 ? documents[doc.type]!.name
-                                : doc.needsRevision
-                                  ? `Upload ulang ${doc.type}`
-                                  : `${doc.type} (Tidak perlu diubah)`}
+                                : `Upload ulang ${doc.type}`}
                             </p>
                             <p className="text-muted-foreground text-xs">
-                              {doc.needsRevision
-                                ? "Format: JPG, PNG, PDF (Max 5MB)"
-                                : "Dokumen sudah sesuai"}
+                              {documents[doc.type]
+                                ? "File baru dipilih"
+                                : "Klik untuk upload file baru"}
                             </p>
                           </div>
                         </div>
                         {documents[doc.type] && (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        )}
-                        {!doc.needsRevision && !documents[doc.type] && (
                           <CheckCircle2 className="h-5 w-5 text-green-600" />
                         )}
                       </label>
@@ -367,7 +286,7 @@ export default function ReviseApplicationScreen() {
               )}
             </Button>
             <p className="text-muted-foreground text-center text-xs">
-              Pastikan semua dokumen yang perlu direvisi sudah diupload
+              Pastikan dokumen yang diupload sudah sesuai dengan catatan revisi
             </p>
           </div>
         </div>

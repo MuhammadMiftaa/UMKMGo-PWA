@@ -1,7 +1,7 @@
 // src/pages/WelcomeScreen.tsx
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ArrowRight, Briefcase, TrendingUp, Award } from "lucide-react";
+import { ArrowRight, TrendingUp, Award } from "lucide-react";
 
 export default function WelcomeScreen() {
   const navigate = useNavigate();

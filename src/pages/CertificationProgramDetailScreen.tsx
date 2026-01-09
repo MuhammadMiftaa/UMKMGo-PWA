@@ -13,86 +13,83 @@ import {
   AlertCircle,
   Shield,
 } from "lucide-react";
-
-interface Program {
-  id: number;
-  title: string;
-  description: string;
-  provider: string;
-  application_deadline: string;
-  certification_type: string;
-  validity_period: string;
-  benefits: string[];
-  requirements: string[];
-  process_steps: string[];
-}
+import { useProgram } from "../contexts/ProgramContext";
+import type { Program } from "../contexts/ProgramContext";
 
 export default function CertificationDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { getProgramDetail } = useProgram();
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setProgram({
-        id: parseInt(id || "1"),
-        title: "Sertifikasi Halal untuk Produk UMKM",
-        description: "Program sertifikasi halal resmi dari BPJPH Kemenag untuk produk makanan dan minuman UMKM. Dengan sertifikat halal, produk Anda akan lebih dipercaya konsumen muslim dan dapat memasuki pasar yang lebih luas.",
-        provider: "BPJPH - Kemenag",
-        application_deadline: "2025-12-10",
-        certification_type: "Halal",
-        validity_period: "4 Tahun",
-        benefits: [
-          "Sertifikat halal resmi dari BPJPH",
-          "Label halal untuk kemasan produk",
-          "Meningkatkan kepercayaan konsumen muslim",
-          "Akses ke pasar retail modern",
-          "Pendampingan proses sertifikasi gratis",
-          "Prioritas program ekspor produk halal",
-        ],
-        requirements: [
-          "Memiliki usaha aktif minimal 1 tahun",
-          "Memiliki NIB dan NPWP",
-          "Produk tidak mengandung bahan haram",
-          "Memiliki tempat produksi yang layak",
-          "Bersedia dilakukan audit lapangan",
-          "Melengkapi dokumen persyaratan",
-        ],
-        process_steps: [
-          "Pengajuan dokumen secara online",
-          "Verifikasi kelengkapan dokumen",
-          "Audit proses produksi di lapangan",
-          "Analisis sampel produk di laboratorium",
-          "Keputusan sertifikasi oleh MUI",
-          "Penerbitan sertifikat halal",
-        ],
-      });
-      setLoading(false);
-    }, 500);
+    if (id) {
+      fetchProgramDetail();
+    }
   }, [id]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+  const fetchProgramDetail = async () => {
+    if (!id) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getProgramDetail(parseInt(id));
+      setProgram(data);
+    } catch (err) {
+      console.error("Error fetching program detail:", err);
+      setError("Gagal memuat detail program");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
-  const calculateDaysLeft = (deadline: string) => {
+  const calculateDaysLeft = (deadline?: string) => {
+    if (!deadline) return 0;
     const today = new Date();
     const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  if (loading || !program) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
           <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
           <p className="text-muted-foreground mt-4">Memuat detail program...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !program) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="px-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+          <p className="text-foreground mt-4 font-semibold">
+            {error || "Program tidak ditemukan"}
+          </p>
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outline"
+            className="mt-4"
+          >
+            Kembali
+          </Button>
         </div>
       </div>
     );
@@ -112,16 +109,20 @@ export default function CertificationDetailScreen() {
           <span className="text-sm font-medium">Kembali</span>
         </button>
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold leading-tight text-white">{program.title}</h1>
+          <h1 className="text-2xl leading-tight font-bold text-white">
+            {program.title}
+          </h1>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
             <Building2 size={16} className="text-white" />
-            <span className="text-sm font-semibold text-white">{program.provider}</span>
+            <span className="text-sm font-semibold text-white">
+              {program.provider}
+            </span>
           </div>
         </div>
       </div>
 
       {daysLeft <= 14 && (
-        <div className="mx-6 -mt-4 relative z-20">
+        <div className="relative z-20 mx-6 -mt-4">
           <Card className="border-2 border-orange-200 bg-linear-to-br from-orange-50 to-red-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -129,8 +130,12 @@ export default function CertificationDetailScreen() {
                   <AlertCircle className="h-5 w-5 text-orange-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-foreground font-semibold">Pendaftaran Segera Ditutup!</p>
-                  <p className="text-muted-foreground text-sm">Tersisa {daysLeft} hari lagi</p>
+                  <p className="text-foreground font-semibold">
+                    Pendaftaran Segera Ditutup!
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    Tersisa {daysLeft} hari lagi
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -148,7 +153,9 @@ export default function CertificationDetailScreen() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Jenis</p>
-                  <p className="text-foreground font-bold">{program.certification_type}</p>
+                  <p className="text-foreground font-bold">
+                    {program.certification_type}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -161,7 +168,9 @@ export default function CertificationDetailScreen() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Masa Berlaku</p>
-                  <p className="text-foreground font-bold">{program.validity_period}</p>
+                  <p className="text-foreground font-bold">
+                    {program.validity_period}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -174,43 +183,57 @@ export default function CertificationDetailScreen() {
               <FileText size={20} className="text-primary" />
               Deskripsi Program
             </h3>
-            <p className="text-muted-foreground leading-relaxed text-sm">{program.description}</p>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              {program.description}
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <Award size={20} className="text-primary" />
-              Manfaat Sertifikasi
-            </h3>
-            <ol className="space-y-3">
-              {program.benefits.map((benefit, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">{index + 1}</span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">{benefit}</span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+        {program.benefits && program.benefits.length > 0 && (
+          <Card className="mb-6 border-blue-100">
+            <CardContent className="p-5">
+              <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
+                <Award size={20} className="text-primary" />
+                Manfaat Sertifikasi
+              </h3>
+              <ol className="space-y-3">
+                {program.benefits.map((benefit, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                      {benefit}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <CheckCircle size={20} className="text-primary" />
-              Persyaratan
-            </h3>
-            <ol className="space-y-3">
-              {program.requirements.map((req, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="border-primary text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold">{index + 1}</span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">{req}</span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+        {program.requirements && program.requirements.length > 0 && (
+          <Card className="mb-6 border-blue-100">
+            <CardContent className="p-5">
+              <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
+                <CheckCircle size={20} className="text-primary" />
+                Persyaratan
+              </h3>
+              <ol className="space-y-3">
+                {program.requirements.map((req, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="border-primary text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold">
+                      {index + 1}
+                    </span>
+                    <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                      {req}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6 border-2 border-red-100 bg-linear-to-br from-red-50/50 to-orange-50/50">
           <CardContent className="p-5">
@@ -219,20 +242,33 @@ export default function CertificationDetailScreen() {
                 <Calendar size={20} className="text-red-600" />
               </div>
               <div className="flex-1">
-                <p className="text-foreground mb-1 font-bold">Batas Pendaftaran</p>
-                <p className="text-lg font-bold text-red-600">{formatDate(program.application_deadline)}</p>
-                <p className="text-muted-foreground mt-1 text-xs">Tersisa {daysLeft} hari lagi</p>
+                <p className="text-foreground mb-1 font-bold">
+                  Batas Pendaftaran
+                </p>
+                <p className="text-lg font-bold text-red-600">
+                  {formatDate(program.application_deadline)}
+                </p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Tersisa {daysLeft} hari lagi
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <div className="space-y-3">
-          <Button onClick={() => navigate(`/apply/certification/${program.id}`)} variant="gradient" size="lg" className="w-full">
+          <Button
+            onClick={() => navigate(`/apply/certification/${program.id}`)}
+            variant="gradient"
+            size="lg"
+            className="w-full"
+          >
             <Award size={20} />
             <span>Ajukan Sertifikasi</span>
           </Button>
-          <p className="text-muted-foreground text-center text-xs">Dengan mendaftar, Anda menyetujui syarat dan ketentuan yang berlaku</p>
+          <p className="text-muted-foreground text-center text-xs">
+            Dengan mendaftar, Anda menyetujui syarat dan ketentuan yang berlaku
+          </p>
         </div>
       </div>
     </div>

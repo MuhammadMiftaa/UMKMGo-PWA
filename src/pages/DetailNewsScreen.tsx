@@ -8,58 +8,38 @@ import {
   User,
   Tag,
   Clock,
+  Loader2,
 } from "lucide-react";
-
-interface NewsDetail {
-  id: number;
-  title: string;
-  slug: string;
-  content: string;
-  thumbnail: string;
-  category: string;
-  author_name: string;
-  views_count: number;
-  created_at: string;
-  tags: string[];
-}
+import { useNews } from "../contexts/NewsContext";
+import type { NewsDetail } from "../contexts/NewsContext";
 
 export default function NewsDetailScreen() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
+  const { getNewsDetail } = useNews();
   const [news, setNews] = useState<NewsDetail | null>(null);
   const [loading, setLoading] = useState(true);
-//   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchNewsDetail();
+    if (slug) {
+      fetchNewsDetail();
+    }
   }, [slug]);
 
   const fetchNewsDetail = async () => {
+    if (!slug) return;
+
+    setLoading(true);
+    setError(null);
+
     try {
-      // Replace with actual API call
-      // const response = await fetch(`${API_BASE_URL}/mobile/news/${slug}`);
-      // const data = await response.json();
-
-      // Mock data for now
-      const mockNewsDetail: NewsDetail = {
-        id: 2,
-        title: "Expo UMKM Jakarta 2025 - Pameran Produk Lokal Terbesar",
-        slug: "expo-umkm-jakarta-2025-pameran-produk-lokal-terbesar",
-        content:
-          "<h2>Expo UMKM Jakarta 2025</h2><p>Kami mengundang seluruh pelaku UMKM untuk berpartisipasi dalam Expo UMKM Jakarta 2025, pameran produk lokal terbesar yang akan diselenggarakan di Jakarta Convention Center.</p><h3>Detail Event</h3><ul><li><strong>Tanggal:</strong> 15-17 Maret 2025</li><li><strong>Waktu:</strong> 09:00 - 21:00 WIB</li><li><strong>Lokasi:</strong> Jakarta Convention Center, Hall A-C</li><li><strong>Tema:</strong> Produk Lokal Go Global</li></ul><h3>Fasilitas untuk Peserta</h3><p>Setiap peserta akan mendapatkan:</p><ol><li>Booth pameran ukuran 3x3 meter</li><li>Branding dan promosi online</li><li>Kesempatan networking dengan buyer</li><li>Media coverage</li><li>Sertifikat keikutsertaan</li></ol><h3>Cara Mendaftar</h3><p>Pendaftaran dibuka hingga 1 Maret 2025. Hubungi kami di expo@umkm.go.id atau WhatsApp 0812-3456-7890.</p>",
-        thumbnail:
-          "http://127.0.0.1:9000/umkmgo-programs/expo_umkm_jakarta_2025_-_pameran_produk_lokal_terbesar/news_thumbnail___1764337504.png",
-        category: "event",
-        author_name: "Super Admin",
-        views_count: 1,
-        created_at: "2025-11-28 20:45:04",
-        tags: ["expo", "pameran", "umkm", "jakarta", "2025"],
-      };
-
-      setNews(mockNewsDetail);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching news detail:", error);
+      const data = await getNewsDetail(slug);
+      setNews(data);
+    } catch (err) {
+      console.error("Error fetching news detail:", err);
+      setError("Gagal memuat detail berita");
+    } finally {
       setLoading(false);
     }
   };
@@ -106,41 +86,43 @@ export default function NewsDetailScreen() {
     return readTime;
   };
 
-//   const handleShare = async () => {
-//     if (navigator.share && news) {
-//       try {
-//         await navigator.share({
-//           title: news.title,
-//           text: news.title,
-//           url: window.location.href,
-//         });
-//       } catch (error) {
-//         console.log("Error sharing:", error);
-//       }
-//     }
-//   };
+  //   const handleShare = async () => {
+  //     if (navigator.share && news) {
+  //       try {
+  //         await navigator.share({
+  //           title: news.title,
+  //           text: news.title,
+  //           url: window.location.href,
+  //         });
+  //       } catch (error) {
+  //         console.log("Error sharing:", error);
+  //       }
+  //     }
+  //   };
 
-//   const handleBookmark = () => {
-//     setIsBookmarked(!isBookmarked);
-//     // Save to localStorage or API
-//   };
+  //   const handleBookmark = () => {
+  //     setIsBookmarked(!isBookmarked);
+  //     // Save to localStorage or API
+  //   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
+          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
           <p className="text-muted-foreground mt-4">Memuat berita...</p>
         </div>
       </div>
     );
   }
 
-  if (!news) {
+  if (error || !news) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <p className="text-muted-foreground">Berita tidak ditemukan</p>
+          <p className="text-muted-foreground">
+            {error || "Berita tidak ditemukan"}
+          </p>
           <Button onClick={() => navigate("/news")} className="mt-4">
             Kembali ke Daftar Berita
           </Button>

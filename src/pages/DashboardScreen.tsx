@@ -1,43 +1,43 @@
 // src/pages/DashboardScreen.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/Button";
+// import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import {
-  Settings,
-  QrCode,
+  // Settings,
   Award,
   BookOpen,
   Banknote,
   TrendingUp,
-  ArrowRight,
-  Sparkles,
   Eye,
   Calendar,
   Loader2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
-import { useAuth } from "../contexts/AuthContext";
 import { useNews } from "../contexts/NewsContext";
+import { useDashboard } from "../contexts/DashboardContext";
 import type { News } from "../contexts/NewsContext";
 
 export default function DashboardScreen() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { newsList, fetchNews, isLoading } = useNews();
-  const [unreadCount] = useState(3);
+  const {
+    dashboardData,
+    fetchDashboard,
+    isLoading: isDashboardLoading,
+  } = useDashboard();
+  const { newsList, fetchNews, isLoading: isNewsLoading } = useNews();
   const [recentNews, setRecentNews] = useState<News[]>([]);
 
   useEffect(() => {
-    // Fetch news on mount
-    loadNews();
+    // Fetch data on mount
+    loadData();
   }, []);
 
-  const loadNews = async () => {
+  const loadData = async () => {
     try {
-      await fetchNews();
+      await Promise.all([fetchDashboard(), fetchNews()]);
     } catch (error) {
-      console.error("Error fetching news:", error);
+      console.error("Error fetching data:", error);
     }
   };
 
@@ -108,7 +108,7 @@ export default function DashboardScreen() {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white pb-24">
+    <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white pb-32">
       {/* Header with Gradient */}
       <div className="from-primary via-accent to-secondary relative overflow-hidden bg-linear-to-br px-6 py-8 pb-24">
         {/* Decorative elements */}
@@ -119,16 +119,23 @@ export default function DashboardScreen() {
           <div>
             <p className="text-sm font-medium text-white/80">Selamat Datang</p>
             <h1 className="mt-1 text-3xl font-bold text-white">
-              {user?.name?.split(" ")[0] || "User"}
+              {dashboardData?.name?.split(" ")[0] || "User"}
             </h1>
           </div>
-          <Button
+          {/* <Button
             onClick={() => navigate("/profile")}
             variant="ghost"
             className="h-10 w-10 rounded-xl bg-white/20 p-0 backdrop-blur-sm hover:bg-white/30"
           >
             <Settings size={20} className="text-white" />
-          </Button>
+          </Button> */}
+          <div className="rounded-xl bg-white/20 p-1">
+            <img
+              className="h-12 w-12 brightness-10000"
+              src="/logo.png"
+              alt="UMKMGo Logo"
+            />
+          </div>
         </div>
       </div>
 
@@ -145,22 +152,39 @@ export default function DashboardScreen() {
                   </p>
                 </div>
                 <h2 className="text-foreground text-xl font-bold">
-                  {user?.name || "User"}
+                  {dashboardData?.name || "User"}
                 </h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {user?.business_name || "-"}
-                </p>
-                <div className="mt-4 flex items-center gap-2">
-                  <div className="flex-1">
+                <div className="mt-4 flex items-center gap-4">
+                  <div>
                     <p className="text-muted-foreground text-xs">Tipe Kartu</p>
                     <p className="font-mono text-sm font-semibold uppercase">
-                      {user?.kartu_type || "-"}
+                      {dashboardData?.kartu_type || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Nomor Kartu</p>
+                    <p className="font-mono text-sm font-semibold">
+                      {dashboardData?.kartu_number || "-"}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="from-primary/10 to-accent/10 rounded-2xl bg-linear-to-br p-4">
-                <QrCode size={56} className="text-primary" />
+              <div className="from-primary/10 to-accent/10 overflow-hidden rounded-2xl bg-linear-to-br">
+                {dashboardData?.qrcode ? (
+                  <img
+                    src={dashboardData.qrcode}
+                    alt="QR Code"
+                    className="h-20 w-20 object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="p-4">
+                    <div className="bg-primary/20 h-12 w-12 animate-pulse rounded-lg" />
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -180,7 +204,11 @@ export default function DashboardScreen() {
                   <p className="text-muted-foreground text-xs">
                     Total Pengajuan
                   </p>
-                  <p className="text-foreground text-xl font-bold">12</p>
+                  <p className="text-foreground text-xl font-bold">
+                    {isDashboardLoading
+                      ? "-"
+                      : (dashboardData?.total_applications ?? 0)}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -194,7 +222,11 @@ export default function DashboardScreen() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Disetujui</p>
-                  <p className="text-foreground text-xl font-bold">8</p>
+                  <p className="text-foreground text-xl font-bold">
+                    {isDashboardLoading
+                      ? "-"
+                      : (dashboardData?.approved_applications ?? 0)}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -208,7 +240,7 @@ export default function DashboardScreen() {
           <h3 className="text-foreground text-lg font-bold">
             Program Tersedia
           </h3>
-          <Sparkles className="text-primary h-5 w-5" />
+          {/* <Sparkles className="text-primary h-5 w-5" /> */}
         </div>
         <div className="grid grid-cols-3 gap-3">
           {menuItems.map((item, idx) => (
@@ -235,7 +267,7 @@ export default function DashboardScreen() {
       </div>
 
       {/* Promo Banner */}
-      <div className="mt-8 px-6">
+      {/* <div className="mt-8 px-6">
         <Card className="border-primary/20 from-primary/5 via-accent/5 to-secondary/5 overflow-hidden border-2 bg-linear-to-br">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
@@ -260,7 +292,7 @@ export default function DashboardScreen() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Recent News */}
       <div className="mt-8 px-6">
@@ -274,7 +306,7 @@ export default function DashboardScreen() {
           </button>
         </div>
 
-        {isLoading ? (
+        {isNewsLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="text-primary h-8 w-8 animate-spin" />
           </div>
@@ -343,7 +375,7 @@ export default function DashboardScreen() {
         )}
       </div>
 
-      <BottomNavigation unreadCount={unreadCount} />
+      <BottomNavigation />
     </div>
   );
 }

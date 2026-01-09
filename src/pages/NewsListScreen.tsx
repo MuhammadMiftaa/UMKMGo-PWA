@@ -228,7 +228,7 @@ export default function NewsListScreen() {
         )}
       </div>
 
-      <BottomNavigation unreadCount={0} />
+      <BottomNavigation />
     </div>
   );
 }

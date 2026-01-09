@@ -13,71 +13,53 @@ import {
   FileText,
   Building2,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
-
-interface Program {
-  id: number;
-  title: string;
-  description: string;
-  banner?: string;
-  provider: string;
-  provider_logo?: string;
-  batch?: number;
-  batch_start_date: string;
-  batch_end_date: string;
-  location: string;
-  application_deadline: string;
-  benefits: string[];
-  requirements: string[];
-}
+import { useProgram } from "../contexts/ProgramContext";
+import type { Program } from "../contexts/ProgramContext";
 
 export default function TrainingDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { getProgramDetail } = useProgram();
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    setTimeout(() => {
-      setProgram({
-        id: parseInt(id || "1"),
-        title: "Pelatihan Digital Marketing untuk UMKM",
-        description: "Program pelatihan komprehensif yang dirancang khusus untuk pelaku UMKM yang ingin meningkatkan kemampuan pemasaran digital mereka. Dengan mengikuti pelatihan ini, Anda akan belajar strategi pemasaran modern yang efektif untuk meningkatkan penjualan dan jangkauan bisnis Anda di era digital.",
-        provider: "Kementerian UMKM",
-        batch: 5,
-        batch_start_date: "2025-12-01",
-        batch_end_date: "2025-12-15",
-        location: "Jakarta Convention Center, Jakarta Pusat",
-        application_deadline: "2025-11-25",
-        benefits: [
-          "Sertifikat resmi dari Kementerian UMKM",
-          "Modul pembelajaran digital gratis",
-          "Konsultasi bisnis dengan mentor berpengalaman",
-          "Akses ke komunitas alumni dan networking",
-          "Uang saku dan konsumsi selama pelatihan",
-        ],
-        requirements: [
-          "Memiliki usaha aktif minimal 6 bulan",
-          "Memiliki Kartu UMKM (Produktif/Afirmatif)",
-          "Berkomitmen mengikuti seluruh sesi pelatihan",
-          "Membawa laptop untuk praktik",
-          "Mengisi formulir pendaftaran lengkap",
-        ],
-      });
-      setLoading(false);
-    }, 500);
+    if (id) {
+      fetchProgramDetail();
+    }
   }, [id]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+  const fetchProgramDetail = async () => {
+    if (!id) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getProgramDetail(parseInt(id));
+      setProgram(data);
+    } catch (err) {
+      console.error("Error fetching program detail:", err);
+      setError("Gagal memuat detail program");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
-  const calculateDaysLeft = (deadline: string) => {
+  const calculateDaysLeft = (deadline?: string) => {
+    if (!deadline) return 0;
     const today = new Date();
     const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate.getTime() - today.getTime();
@@ -85,12 +67,30 @@ export default function TrainingDetailScreen() {
     return diffDays;
   };
 
-  if (loading || !program) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
+          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
           <p className="text-muted-foreground mt-4">Memuat detail program...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !program) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-muted-foreground">
+            {error || "Program tidak ditemukan"}
+          </p>
+          <Button
+            onClick={() => navigate("/programs?type=training")}
+            className="mt-4"
+          >
+            Kembali ke Daftar Program
+          </Button>
         </div>
       </div>
     );
@@ -111,19 +111,21 @@ export default function TrainingDetailScreen() {
           <span className="text-sm font-medium">Kembali</span>
         </button>
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold leading-tight text-white">
+          <h1 className="text-2xl leading-tight font-bold text-white">
             {program.title}
           </h1>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
             <Building2 size={16} className="text-white" />
-            <span className="text-sm font-semibold text-white">{program.provider}</span>
+            <span className="text-sm font-semibold text-white">
+              {program.provider}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Deadline Alert */}
       {daysLeft <= 7 && (
-        <div className="mx-6 -mt-4 relative z-20">
+        <div className="relative z-20 mx-6 -mt-4">
           <Card className="border-2 border-orange-200 bg-linear-to-br from-orange-50 to-red-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -131,8 +133,12 @@ export default function TrainingDetailScreen() {
                   <AlertCircle className="h-5 w-5 text-orange-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-foreground font-semibold">Pendaftaran Segera Ditutup!</p>
-                  <p className="text-muted-foreground text-sm">Tersisa {daysLeft} hari lagi</p>
+                  <p className="text-foreground font-semibold">
+                    Pendaftaran Segera Ditutup!
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    Tersisa {daysLeft} hari lagi
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -151,7 +157,9 @@ export default function TrainingDetailScreen() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Batch</p>
-                  <p className="text-foreground font-bold">Batch {program.batch}</p>
+                  <p className="text-foreground font-bold">
+                    Batch {program.batch}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -186,7 +194,9 @@ export default function TrainingDetailScreen() {
                 </div>
                 <div className="flex-1">
                   <p className="text-muted-foreground text-xs">Tanggal Mulai</p>
-                  <p className="text-foreground font-semibold">{formatDate(program.batch_start_date)}</p>
+                  <p className="text-foreground font-semibold">
+                    {formatDate(program.batch_start_date)}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -194,8 +204,12 @@ export default function TrainingDetailScreen() {
                   <Calendar size={16} className="text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-muted-foreground text-xs">Tanggal Selesai</p>
-                  <p className="text-foreground font-semibold">{formatDate(program.batch_end_date)}</p>
+                  <p className="text-muted-foreground text-xs">
+                    Tanggal Selesai
+                  </p>
+                  <p className="text-foreground font-semibold">
+                    {formatDate(program.batch_end_date)}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -204,7 +218,9 @@ export default function TrainingDetailScreen() {
                 </div>
                 <div className="flex-1">
                   <p className="text-muted-foreground text-xs">Lokasi</p>
-                  <p className="text-foreground font-semibold">{program.location}</p>
+                  <p className="text-foreground font-semibold">
+                    {program.location}
+                  </p>
                 </div>
               </div>
             </div>
@@ -218,55 +234,59 @@ export default function TrainingDetailScreen() {
               <FileText size={20} className="text-primary" />
               Deskripsi Program
             </h3>
-            <p className="text-muted-foreground leading-relaxed text-sm">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               {program.description}
             </p>
           </CardContent>
         </Card>
 
         {/* Benefits */}
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <Award size={20} className="text-primary" />
-              Manfaat yang Didapat
-            </h3>
-            <ol className="space-y-3">
-              {program.benefits.map((benefit, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-                    {index + 1}
-                  </span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
-                    {benefit}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+        {program.benefits && program.benefits.length > 0 && (
+          <Card className="mb-6 border-blue-100">
+            <CardContent className="p-5">
+              <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
+                <Award size={20} className="text-primary" />
+                Manfaat yang Didapat
+              </h3>
+              <ol className="space-y-3">
+                {program.benefits.map((benefit, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                      {benefit}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Requirements */}
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <CheckCircle size={20} className="text-primary" />
-              Persyaratan
-            </h3>
-            <ol className="space-y-3">
-              {program.requirements.map((requirement, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="border-primary text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold">
-                    {index + 1}
-                  </span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
-                    {requirement}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+        {program.requirements && program.requirements.length > 0 && (
+          <Card className="mb-6 border-blue-100">
+            <CardContent className="p-5">
+              <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
+                <CheckCircle size={20} className="text-primary" />
+                Persyaratan
+              </h3>
+              <ol className="space-y-3">
+                {program.requirements.map((requirement, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="border-primary text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold">
+                      {index + 1}
+                    </span>
+                    <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                      {requirement}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Deadline Info */}
         <Card className="mb-6 border-2 border-red-100 bg-linear-to-br from-red-50/50 to-orange-50/50">
@@ -276,7 +296,9 @@ export default function TrainingDetailScreen() {
                 <Clock size={20} className="text-red-600" />
               </div>
               <div className="flex-1">
-                <p className="text-foreground mb-1 font-bold">Batas Pendaftaran</p>
+                <p className="text-foreground mb-1 font-bold">
+                  Batas Pendaftaran
+                </p>
                 <p className="text-lg font-bold text-red-600">
                   {formatDate(program.application_deadline)}
                 </p>

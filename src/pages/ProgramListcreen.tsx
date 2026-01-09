@@ -312,7 +312,7 @@ export default function ProgramListScreen() {
         )}
       </div>
 
-      <BottomNavigation unreadCount={0} />
+      <BottomNavigation />
     </div>
   );
 }

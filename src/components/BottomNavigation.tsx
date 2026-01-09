@@ -1,11 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Home, Activity, Bell, User } from 'lucide-react'
 
-interface BottomNavigationProps {
-  unreadCount?: number
-}
-
-export default function BottomNavigation({ unreadCount = 0 }: BottomNavigationProps) {
+export default function BottomNavigation() {
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -14,7 +10,7 @@ export default function BottomNavigation({ unreadCount = 0 }: BottomNavigationPr
   const items = [
     { icon: Home, label: 'Beranda', path: '/dashboard' },
     { icon: Activity, label: 'Aktivitas', path: '/activity' },
-    { icon: Bell, label: 'Notifikasi', path: '/notifications', badge: unreadCount },
+    { icon: Bell, label: 'Notifikasi', path: '/notifications', badge: 1 },
     { icon: User, label: 'Profile', path: '/profile' },
   ]
 

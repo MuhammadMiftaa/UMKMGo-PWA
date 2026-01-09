@@ -14,71 +14,42 @@ import {
   AlertCircle,
   TrendingUp,
 } from "lucide-react";
-
-interface Program {
-  id: number;
-  title: string;
-  description: string;
-  provider: string;
-  min_amount: number;
-  max_amount: number;
-  interest_rate: string;
-  max_tenure_months: number;
-  application_deadline: string;
-  benefits: string[];
-  requirements: string[];
-  funding_purposes: string[];
-}
+import { useProgram } from "../contexts/ProgramContext";
+import type { Program } from "../contexts/ProgramContext";
 
 export default function FundingDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { getProgramDetail } = useProgram();
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setProgram({
-        id: parseInt(id || "1"),
-        title: "Pendanaan Modal Usaha Produktif",
-        description:
-          "Program pembiayaan modal kerja dan investasi untuk UMKM dengan bunga rendah dan tenor fleksibel. Dirancang khusus untuk membantu UMKM mengembangkan usaha, meningkatkan produksi, atau ekspansi bisnis.",
-        provider: "KUR - Bank Mandiri",
-        min_amount: 5000000,
-        max_amount: 50000000,
-        interest_rate: "6% per tahun",
-        max_tenure_months: 36,
-        application_deadline: "2025-12-31",
-        benefits: [
-          "Bunga rendah dan kompetitif",
-          "Proses persetujuan cepat (7-14 hari kerja)",
-          "Tenor fleksibel hingga 3 tahun",
-          "Tanpa agunan untuk pinjaman di bawah Rp 25 juta",
-          "Pendampingan bisnis gratis",
-          "Dapat digunakan untuk modal kerja atau investasi",
-        ],
-        requirements: [
-          "Usaha telah berjalan minimal 1 tahun",
-          "Memiliki NIB dan NPWP",
-          "Omzet minimal Rp 5 juta per bulan",
-          "Tidak sedang dalam kredit macet",
-          "Memiliki rencana bisnis yang jelas",
-          "Bersedia dilakukan survey lapangan",
-        ],
-        funding_purposes: [
-          "Modal kerja (pembelian bahan baku, stok barang)",
-          "Pembelian peralatan/mesin produksi",
-          "Renovasi atau ekspansi tempat usaha",
-          "Pengembangan produk baru",
-          "Marketing dan promosi",
-          "Investasi teknologi/digitalisasi",
-        ],
-      });
-      setLoading(false);
-    }, 500);
+    if (id) {
+      fetchProgramDetail();
+    }
   }, [id]);
 
-  const formatCurrency = (amount: number) => {
+  const fetchProgramDetail = async () => {
+    if (!id) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getProgramDetail(parseInt(id));
+      setProgram(data);
+    } catch (err) {
+      console.error("Error fetching program detail:", err);
+      setError("Gagal memuat detail program");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount?: number) => {
+    if (amount === undefined || amount === null) return "-";
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
@@ -86,7 +57,8 @@ export default function FundingDetailScreen() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("id-ID", {
       day: "numeric",
       month: "long",
@@ -94,19 +66,40 @@ export default function FundingDetailScreen() {
     });
   };
 
-  const calculateDaysLeft = (deadline: string) => {
+  const calculateDaysLeft = (deadline?: string) => {
+    if (!deadline) return 0;
     const today = new Date();
     const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  if (loading || !program) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
           <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
           <p className="text-muted-foreground mt-4">Memuat detail program...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !program) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="px-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+          <p className="text-foreground mt-4 font-semibold">
+            {error || "Program tidak ditemukan"}
+          </p>
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outline"
+            className="mt-4"
+          >
+            Kembali
+          </Button>
         </div>
       </div>
     );
@@ -243,47 +236,51 @@ export default function FundingDetailScreen() {
           </CardContent>
         </Card>
 
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <Award size={20} className="text-primary" />
-              Keuntungan Program
-            </h3>
-            <ol className="space-y-3">
-              {program.benefits.map((benefit, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-                    {index + 1}
-                  </span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
-                    {benefit}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+        {program.benefits && program.benefits.length > 0 && (
+          <Card className="mb-6 border-blue-100">
+            <CardContent className="p-5">
+              <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
+                <Award size={20} className="text-primary" />
+                Keuntungan Program
+              </h3>
+              <ol className="space-y-3">
+                {program.benefits.map((benefit, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                      {benefit}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="mb-6 border-blue-100">
-          <CardContent className="p-5">
-            <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
-              <CheckCircle size={20} className="text-primary" />
-              Persyaratan
-            </h3>
-            <ol className="space-y-3">
-              {program.requirements.map((req, index) => (
-                <li key={index} className="flex gap-3">
-                  <span className="border-primary text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold">
-                    {index + 1}
-                  </span>
-                  <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
-                    {req}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+        {program.requirements && program.requirements.length > 0 && (
+          <Card className="mb-6 border-blue-100">
+            <CardContent className="p-5">
+              <h3 className="text-foreground mb-4 flex items-center gap-2 font-bold">
+                <CheckCircle size={20} className="text-primary" />
+                Persyaratan
+              </h3>
+              <ol className="space-y-3">
+                {program.requirements.map((req, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="border-primary text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold">
+                      {index + 1}
+                    </span>
+                    <span className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                      {req}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6 border-2 border-red-100 bg-linear-to-br from-red-50/50 to-orange-50/50">
           <CardContent className="p-5">

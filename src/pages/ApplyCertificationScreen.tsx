@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
 import { Card, CardContent } from "../components/ui/Card";
@@ -13,25 +13,8 @@ import {
   AlertCircle,
   Award,
 } from "lucide-react";
-
-interface UserData {
-  fullname: string;
-  business_name: string;
-  nik: string;
-  gender: string;
-  birth_date: string;
-  phone: string;
-  address: string;
-  province: string;
-  city: string;
-  district: string;
-  postal_code: string;
-  nib: string;
-  npwp: string;
-  kartu_type: string;
-  kartu_number: string;
-  business_permit: string;
-}
+import { useProgram } from "../contexts/ProgramContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface FormData {
   business_sector: string;
@@ -44,8 +27,10 @@ interface FormData {
 
 export default function ApplyCertificationScreen() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { applyCertification } = useProgram();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [formData, setFormData] = useState<FormData>({
     business_sector: "",
     product_or_service: "",
@@ -63,34 +48,10 @@ export default function ApplyCertificationScreen() {
   });
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const stored = localStorage.getItem("userData");
-    let data;
-    if (stored) {
-      data = JSON.parse(stored);
-    }
-    setUserData({
-      fullname: data?.fullname || "Akbar Chalay",
-      business_name: data?.businessName || "PT Semua Teman",
-      nik: data?.nik || "1234567890987654",
-      gender: data?.gender === "male" ? "Laki-laki" : "Perempuan",
-      birth_date: data?.birthDate || "2008-08-06",
-      phone: data?.phone || "81234567890",
-      address: data?.address || "Jl. Ketintang No. 123",
-      province: "Jawa Timur",
-      city: "Surabaya",
-      district: data?.district || "Ketintang",
-      postal_code: data?.postalCode || "60210",
-      nib: data?.nib || "-",
-      npwp: data?.npwp || "-",
-      kartu_type: data?.kartuType || "Kartu Afirmatif",
-      kartu_number: data?.kartuNumber || "1234567890",
-      business_permit: "-",
-    });
-  }, []);
-
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -105,47 +66,94 @@ export default function ApplyCertificationScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
     setError("");
 
-    if (!formData.business_sector.trim()) {
-      setError("Sektor usaha harus diisi");
-      setLoading(false);
-      return;
-    }
+    try {
+      if (!formData.business_sector.trim()) {
+        setError("Sektor usaha harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.product_or_service.trim()) {
-      setError("Produk/layanan yang akan disertifikasi harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.product_or_service.trim()) {
+        setError("Produk/layanan yang akan disertifikasi harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.business_description.trim()) {
-      setError("Deskripsi usaha harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.business_description.trim()) {
+        setError("Deskripsi usaha harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.certification_goals.trim()) {
-      setError("Tujuan sertifikasi harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.certification_goals.trim()) {
+        setError("Tujuan sertifikasi harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!documents.ktp || !documents.nib || !documents.npwp || !documents.portfolio) {
-      setError("Semua dokumen wajib harus diupload");
-      setLoading(false);
-      return;
-    }
+      if (
+        !documents.ktp ||
+        !documents.nib ||
+        !documents.npwp ||
+        !documents.portfolio
+      ) {
+        setError("Semua dokumen wajib harus diupload");
+        setLoading(false);
+        return;
+      }
 
-    setTimeout(() => {
+      // Convert files to base64
+      const ktpBase64 = await fileToBase64(documents.ktp);
+      const nibBase64 = await fileToBase64(documents.nib);
+      const npwpBase64 = await fileToBase64(documents.npwp);
+      const portfolioBase64 = await fileToBase64(documents.portfolio);
+      const izinUsahaBase64 = documents.izin_usaha
+        ? await fileToBase64(documents.izin_usaha)
+        : undefined;
+
+      // Submit to API
+      await applyCertification({
+        program_id: parseInt(id || "0"),
+        business_sector: formData.business_sector,
+        product_or_service: formData.product_or_service,
+        business_description: formData.business_description,
+        years_operating: parseInt(formData.years_operating) || 0,
+        current_standards: formData.current_standards,
+        certification_goals: formData.certification_goals,
+        documents: {
+          ktp: ktpBase64,
+          nib: nibBase64,
+          npwp: npwpBase64,
+          portfolio: portfolioBase64,
+          izin_usaha: izinUsahaBase64,
+        },
+      });
+
       alert("Pengajuan sertifikasi berhasil dikirim!");
       navigate("/activity");
-    }, 1000);
+    } catch (err) {
+      console.error("Error submitting application:", err);
+      setError(err instanceof Error ? err.message : "Gagal mengirim pengajuan");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!userData) {
+  if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
@@ -168,7 +176,9 @@ export default function ApplyCertificationScreen() {
           <span className="text-sm font-medium">Kembali</span>
         </button>
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold text-white">Pengajuan Sertifikasi</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Pengajuan Sertifikasi
+          </h1>
           <p className="mt-2 text-white/80">Lengkapi data pengajuan Anda</p>
         </div>
       </div>
@@ -197,24 +207,26 @@ export default function ApplyCertificationScreen() {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nama Lengkap</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.fullname}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nama Lengkap
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.name}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NIK</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.nik}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Jenis Kelamin</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.gender}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Tanggal Lahir</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.birth_date}</span>
+                  <span className="text-muted-foreground text-sm">Email</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.email || "-"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground text-sm">Nomor Telepon</span>
-                  <span className="text-foreground text-sm font-semibold">+62{userData.phone}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nomor Telepon
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    +62{user.phone || "-"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -231,28 +243,24 @@ export default function ApplyCertificationScreen() {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nama Usaha</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.business_name}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Kartu UMKM</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.kartu_type}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nomor Kartu</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.kartu_number}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NIB</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.nib}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NPWP</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.npwp}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nama Usaha
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.business_name || "-"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground text-sm">Izin Usaha</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.business_permit}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Kartu UMKM
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.kartu_type === "afirmatif"
+                      ? "Kartu Afirmatif"
+                      : user.kartu_type === "produktif"
+                        ? "Kartu Produktif"
+                        : "-"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -290,7 +298,8 @@ export default function ApplyCertificationScreen() {
 
                 <div className="space-y-2">
                   <Label htmlFor="product_or_service">
-                    Produk/Layanan yang Akan Disertifikasi <span className="text-red-500">*</span>
+                    Produk/Layanan yang Akan Disertifikasi{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <input
                     id="product_or_service"
@@ -304,7 +313,8 @@ export default function ApplyCertificationScreen() {
 
                 <div className="space-y-2">
                   <Label htmlFor="business_description">
-                    Deskripsi Lengkap Usaha <span className="text-red-500">*</span>
+                    Deskripsi Lengkap Usaha{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <textarea
                     id="business_description"
@@ -318,7 +328,9 @@ export default function ApplyCertificationScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="years_operating">Lama Usaha Berjalan (Tahun)</Label>
+                  <Label htmlFor="years_operating">
+                    Lama Usaha Berjalan (Tahun)
+                  </Label>
                   <input
                     id="years_operating"
                     name="years_operating"
@@ -331,7 +343,9 @@ export default function ApplyCertificationScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="current_standards">Standar/Prosedur yang Sudah Diterapkan</Label>
+                  <Label htmlFor="current_standards">
+                    Standar/Prosedur yang Sudah Diterapkan
+                  </Label>
                   <textarea
                     id="current_standards"
                     name="current_standards"
@@ -350,13 +364,16 @@ export default function ApplyCertificationScreen() {
             <CardContent className="p-5">
               <div className="mb-4 flex items-center gap-2">
                 <Award size={20} className="text-primary" />
-                <h2 className="text-foreground font-bold">Tujuan Sertifikasi</h2>
+                <h2 className="text-foreground font-bold">
+                  Tujuan Sertifikasi
+                </h2>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="certification_goals">
-                    Tujuan Mendapatkan Sertifikasi <span className="text-red-500">*</span>
+                    Tujuan Mendapatkan Sertifikasi{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <textarea
                     id="certification_goals"
@@ -383,20 +400,38 @@ export default function ApplyCertificationScreen() {
                 {[
                   { id: "ktp", label: "KTP", required: true, color: "blue" },
                   { id: "nib", label: "NIB", required: true, color: "green" },
-                  { id: "npwp", label: "NPWP", required: true, color: "purple" },
-                  { id: "portfolio", label: "Portfolio Produk/Layanan", required: true, color: "orange" },
-                  { id: "izin_usaha", label: "Izin Usaha Lainnya", required: false, color: "gray" },
+                  {
+                    id: "npwp",
+                    label: "NPWP",
+                    required: true,
+                    color: "purple",
+                  },
+                  {
+                    id: "portfolio",
+                    label: "Portfolio Produk/Layanan",
+                    required: true,
+                    color: "orange",
+                  },
+                  {
+                    id: "izin_usaha",
+                    label: "Izin Usaha Lainnya",
+                    required: false,
+                    color: "gray",
+                  },
                 ].map((doc) => (
                   <div key={doc.id} className="space-y-2">
                     <Label>
-                      {doc.label} {doc.required && <span className="text-red-500">*</span>}
+                      {doc.label}{" "}
+                      {doc.required && <span className="text-red-500">*</span>}
                     </Label>
                     <div className="relative">
                       <input
                         id={doc.id}
                         type="file"
                         accept="image/*,.pdf"
-                        onChange={(e) => handleFileChange(e, doc.id as keyof typeof documents)}
+                        onChange={(e) =>
+                          handleFileChange(e, doc.id as keyof typeof documents)
+                        }
                         className="hidden"
                       />
                       <label
@@ -405,16 +440,21 @@ export default function ApplyCertificationScreen() {
                       >
                         <div className="flex items-center gap-3">
                           <div className={`rounded-xl bg-${doc.color}-100 p-2`}>
-                            <Upload size={20} className={`text-${doc.color}-600`} />
+                            <Upload
+                              size={20}
+                              className={`text-${doc.color}-600`}
+                            />
                           </div>
                           <div>
                             <p className="text-foreground text-sm font-semibold">
                               {documents[doc.id as keyof typeof documents]
-                                ? documents[doc.id as keyof typeof documents]!.name
+                                ? documents[doc.id as keyof typeof documents]!
+                                    .name
                                 : `Pilih file ${doc.label}`}
                             </p>
                             <p className="text-muted-foreground text-xs">
-                              Format: JPG, PNG, PDF (Max {doc.id === "portfolio" ? "5MB" : "2MB"})
+                              Format: JPG, PNG, PDF (Max{" "}
+                              {doc.id === "portfolio" ? "5MB" : "2MB"})
                             </p>
                           </div>
                         </div>

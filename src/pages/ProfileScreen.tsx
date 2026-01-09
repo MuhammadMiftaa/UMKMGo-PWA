@@ -211,7 +211,7 @@ export default function ProfileScreen() {
         </div>
       </div>
 
-      <BottomNavigation unreadCount={0} />
+      <BottomNavigation />
     </div>
   );
 }

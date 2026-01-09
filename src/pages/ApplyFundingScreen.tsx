@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
 import { Input } from "../components/ui/Input";
@@ -14,26 +14,8 @@ import {
   AlertCircle,
   DollarSign,
 } from "lucide-react";
-
-interface UserData {
-  fullname: string;
-  business_name: string;
-  nik: string;
-  gender: string;
-  birth_date: string;
-  phone: string;
-  address: string;
-  province: string;
-  city: string;
-  district: string;
-  postal_code: string;
-  nib: string;
-  npwp: string;
-  kartu_type: string;
-  kartu_number: string;
-  revenue_record: string;
-  business_permit: string;
-}
+import { useProgram } from "../contexts/ProgramContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface FormData {
   business_sector: string;
@@ -60,9 +42,10 @@ interface Documents {
 
 export default function ApplyFundingScreen() {
   const navigate = useNavigate();
-//   const { id } = useParams();
+  const { id } = useParams();
+  const { applyFunding } = useProgram();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [formData, setFormData] = useState<FormData>({
     business_sector: "",
     business_description: "",
@@ -98,35 +81,10 @@ export default function ApplyFundingScreen() {
     "Lainnya",
   ];
 
-  useEffect(() => {
-    const stored = localStorage.getItem("userData");
-    let data;
-    if (stored) {
-      data = JSON.parse(stored);
-    }
-    setUserData({
-      fullname: data?.fullname || "Akbar Chalay",
-      business_name: data?.businessName || "PT Semua Teman",
-      nik: data?.nik || "1234567890987654",
-      gender: data?.gender === "male" ? "Laki-laki" : "Perempuan",
-      birth_date: data?.birthDate || "2008-08-06",
-      phone: data?.phone || "81234567890",
-      address: data?.address || "Jl. Ketintang No. 123",
-      province: "Jawa Timur",
-      city: "Surabaya",
-      district: data?.district || "Ketintang",
-      postal_code: data?.postalCode || "60210",
-      nib: data?.nib || "1234567890123",
-      npwp: data?.npwp || "12.345.678.9-012.000",
-      kartu_type: data?.kartuType || "Kartu Afirmatif",
-      kartu_number: data?.kartuNumber || "1234567890",
-      revenue_record: "Rp 50.000.000 - Rp 100.000.000 / bulan",
-      business_permit: "Tersedia",
-    });
-  }, []);
-
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -141,68 +99,131 @@ export default function ApplyFundingScreen() {
     }
   };
 
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const formatCurrency = (value: string) => {
     const number = value.replace(/\D/g, "");
     return new Intl.NumberFormat("id-ID").format(Number(number));
   };
 
-  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof FormData) => {
+  const handleCurrencyChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: keyof FormData,
+  ) => {
     const value = e.target.value.replace(/\D/g, "");
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setLoading(true);
     setError("");
 
-    // Validasi required fields
-    if (!formData.business_sector) {
-      setError("Sektor usaha harus diisi");
-      setLoading(false);
-      return;
-    }
+    try {
+      // Validasi required fields
+      if (!formData.business_sector) {
+        setError("Sektor usaha harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.business_description.trim()) {
-      setError("Deskripsi usaha harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.business_description.trim()) {
+        setError("Deskripsi usaha harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.requested_amount) {
-      setError("Jumlah dana yang diajukan harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.requested_amount) {
+        setError("Jumlah dana yang diajukan harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.fund_purpose.trim()) {
-      setError("Tujuan penggunaan dana harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.fund_purpose.trim()) {
+        setError("Tujuan penggunaan dana harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!formData.requested_tenure_months) {
-      setError("Tenor/jangka waktu harus diisi");
-      setLoading(false);
-      return;
-    }
+      if (!formData.requested_tenure_months) {
+        setError("Tenor/jangka waktu harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    // Validasi dokumen required
-    const requiredDocs: (keyof Documents)[] = ["ktp", "nib", "npwp", "rekening", "proposal", "laporan_keuangan"];
-    const missingDocs = requiredDocs.filter((doc) => !documents[doc]);
+      // Validasi dokumen required
+      const requiredDocs: (keyof Documents)[] = [
+        "ktp",
+        "nib",
+        "npwp",
+        "rekening",
+        "proposal",
+        "laporan_keuangan",
+      ];
+      const missingDocs = requiredDocs.filter((doc) => !documents[doc]);
 
-    if (missingDocs.length > 0) {
-      setError(`Dokumen wajib belum lengkap: ${missingDocs.join(", ")}`);
-      setLoading(false);
-      return;
-    }
+      if (missingDocs.length > 0) {
+        setError(`Dokumen wajib belum lengkap: ${missingDocs.join(", ")}`);
+        setLoading(false);
+        return;
+      }
 
-    setTimeout(() => {
+      // Convert files to base64
+      const ktpBase64 = await fileToBase64(documents.ktp!);
+      const nibBase64 = await fileToBase64(documents.nib!);
+      const npwpBase64 = await fileToBase64(documents.npwp!);
+      const rekeningBase64 = await fileToBase64(documents.rekening!);
+      const proposalBase64 = await fileToBase64(documents.proposal!);
+      const financialRecordsBase64 = await fileToBase64(
+        documents.laporan_keuangan!,
+      );
+      const dokumenAgunanBase64 = documents.dokumen_agunan
+        ? await fileToBase64(documents.dokumen_agunan)
+        : undefined;
+
+      // Submit to API
+      await applyFunding({
+        program_id: parseInt(id || "0"),
+        business_sector: formData.business_sector,
+        business_description: formData.business_description,
+        years_operating: parseInt(formData.years_operating) || 0,
+        requested_amount: parseInt(formData.requested_amount) || 0,
+        fund_purpose: formData.fund_purpose,
+        business_plan: formData.business_plan,
+        revenue_projection: parseInt(formData.revenue_projection) || 0,
+        monthly_revenue: parseInt(formData.monthly_revenue) || 0,
+        requested_tenure_months:
+          parseInt(formData.requested_tenure_months) || 0,
+        collateral_description: formData.collateral_description,
+        documents: {
+          ktp: ktpBase64,
+          nib: nibBase64,
+          npwp: npwpBase64,
+          rekening: rekeningBase64,
+          proposal: proposalBase64,
+          financial_records: financialRecordsBase64,
+          dokumen_agunan: dokumenAgunanBase64,
+        },
+      });
+
       alert("Pengajuan pendanaan berhasil dikirim!");
       navigate("/activity");
-    }, 1000);
+    } catch (err) {
+      console.error("Error submitting application:", err);
+      setError(err instanceof Error ? err.message : "Gagal mengirim pengajuan");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!userData) {
+  if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
@@ -255,24 +276,26 @@ export default function ApplyFundingScreen() {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nama Lengkap</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.fullname}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nama Lengkap
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.name}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NIK</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.nik}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Jenis Kelamin</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.gender}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Tanggal Lahir</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.birth_date}</span>
+                  <span className="text-muted-foreground text-sm">Email</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.email || "-"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground text-sm">Nomor Telepon</span>
-                  <span className="text-foreground text-sm font-semibold">+62{userData.phone}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nomor Telepon
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    +62{user.phone || "-"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -290,32 +313,24 @@ export default function ApplyFundingScreen() {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nama Usaha</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.business_name}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Kartu UMKM</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.kartu_type}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Nomor Kartu</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.kartu_number}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NIB</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.nib}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NPWP</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.npwp}</span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">Catatan Omzet</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.revenue_record}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Nama Usaha
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.business_name || "-"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground text-sm">Izin Usaha</span>
-                  <span className="text-foreground text-sm font-semibold">{userData.business_permit}</span>
+                  <span className="text-muted-foreground text-sm">
+                    Kartu UMKM
+                  </span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {user.kartu_type === "afirmatif"
+                      ? "Kartu Afirmatif"
+                      : user.kartu_type === "produktif"
+                        ? "Kartu Produktif"
+                        : "-"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -368,7 +383,9 @@ export default function ApplyFundingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="years_operating">Lama Usaha Berjalan (Tahun)</Label>
+                  <Label htmlFor="years_operating">
+                    Lama Usaha Berjalan (Tahun)
+                  </Label>
                   <Input
                     id="years_operating"
                     name="years_operating"
@@ -381,14 +398,20 @@ export default function ApplyFundingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="monthly_revenue">Omzet Bulanan Saat Ini</Label>
+                  <Label htmlFor="monthly_revenue">
+                    Omzet Bulanan Saat Ini
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                    <span className="text-muted-foreground absolute top-1/2 left-4 -translate-y-1/2">
+                      Rp
+                    </span>
                     <Input
                       id="monthly_revenue"
                       name="monthly_revenue"
                       value={formatCurrency(formData.monthly_revenue)}
-                      onChange={(e) => handleCurrencyChange(e, "monthly_revenue")}
+                      onChange={(e) =>
+                        handleCurrencyChange(e, "monthly_revenue")
+                      }
                       placeholder="0"
                       className="pl-12"
                     />
@@ -403,21 +426,28 @@ export default function ApplyFundingScreen() {
             <CardContent className="p-5">
               <div className="mb-4 flex items-center gap-2">
                 <DollarSign size={20} className="text-primary" />
-                <h2 className="text-foreground font-bold">Pengajuan Pendanaan</h2>
+                <h2 className="text-foreground font-bold">
+                  Pengajuan Pendanaan
+                </h2>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="requested_amount">
-                    Jumlah Dana yang Diajukan <span className="text-red-500">*</span>
+                    Jumlah Dana yang Diajukan{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                    <span className="text-muted-foreground absolute top-1/2 left-4 -translate-y-1/2">
+                      Rp
+                    </span>
                     <Input
                       id="requested_amount"
                       name="requested_amount"
                       value={formatCurrency(formData.requested_amount)}
-                      onChange={(e) => handleCurrencyChange(e, "requested_amount")}
+                      onChange={(e) =>
+                        handleCurrencyChange(e, "requested_amount")
+                      }
                       placeholder="0"
                       className="pl-12"
                       required
@@ -430,7 +460,8 @@ export default function ApplyFundingScreen() {
 
                 <div className="space-y-2">
                   <Label htmlFor="requested_tenure_months">
-                    Tenor/Jangka Waktu (Bulan) <span className="text-red-500">*</span>
+                    Tenor/Jangka Waktu (Bulan){" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <select
                     id="requested_tenure_months"
@@ -451,7 +482,8 @@ export default function ApplyFundingScreen() {
 
                 <div className="space-y-2">
                   <Label htmlFor="fund_purpose">
-                    Tujuan Penggunaan Dana <span className="text-red-500">*</span>
+                    Tujuan Penggunaan Dana{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <textarea
                     id="fund_purpose"
@@ -466,7 +498,9 @@ export default function ApplyFundingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="business_plan">Rencana Bisnis/Pengembangan</Label>
+                  <Label htmlFor="business_plan">
+                    Rencana Bisnis/Pengembangan
+                  </Label>
                   <textarea
                     id="business_plan"
                     name="business_plan"
@@ -479,14 +513,20 @@ export default function ApplyFundingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="revenue_projection">Proyeksi Omzet Setelah Pendanaan</Label>
+                  <Label htmlFor="revenue_projection">
+                    Proyeksi Omzet Setelah Pendanaan
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                    <span className="text-muted-foreground absolute top-1/2 left-4 -translate-y-1/2">
+                      Rp
+                    </span>
                     <Input
                       id="revenue_projection"
                       name="revenue_projection"
                       value={formatCurrency(formData.revenue_projection)}
-                      onChange={(e) => handleCurrencyChange(e, "revenue_projection")}
+                      onChange={(e) =>
+                        handleCurrencyChange(e, "revenue_projection")
+                      }
                       placeholder="0"
                       className="pl-12"
                     />
@@ -494,7 +534,9 @@ export default function ApplyFundingScreen() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="collateral_description">Deskripsi Agunan/Jaminan (Opsional)</Label>
+                  <Label htmlFor="collateral_description">
+                    Deskripsi Agunan/Jaminan (Opsional)
+                  </Label>
                   <textarea
                     id="collateral_description"
                     name="collateral_description"
@@ -520,7 +562,9 @@ export default function ApplyFundingScreen() {
               <div className="space-y-4">
                 {/* KTP */}
                 <div className="space-y-2">
-                  <Label>KTP <span className="text-red-500">*</span></Label>
+                  <Label>
+                    KTP <span className="text-red-500">*</span>
+                  </Label>
                   <FileUploadBox
                     id="ktp"
                     file={documents.ktp}
@@ -532,7 +576,9 @@ export default function ApplyFundingScreen() {
 
                 {/* NIB */}
                 <div className="space-y-2">
-                  <Label>NIB <span className="text-red-500">*</span></Label>
+                  <Label>
+                    NIB <span className="text-red-500">*</span>
+                  </Label>
                   <FileUploadBox
                     id="nib"
                     file={documents.nib}
@@ -544,7 +590,9 @@ export default function ApplyFundingScreen() {
 
                 {/* NPWP */}
                 <div className="space-y-2">
-                  <Label>NPWP <span className="text-red-500">*</span></Label>
+                  <Label>
+                    NPWP <span className="text-red-500">*</span>
+                  </Label>
                   <FileUploadBox
                     id="npwp"
                     file={documents.npwp}
@@ -556,7 +604,10 @@ export default function ApplyFundingScreen() {
 
                 {/* Rekening Bank */}
                 <div className="space-y-2">
-                  <Label>Rekening Bank / Mutasi 3-6 Bulan <span className="text-red-500">*</span></Label>
+                  <Label>
+                    Rekening Bank / Mutasi 3-6 Bulan{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <FileUploadBox
                     id="rekening"
                     file={documents.rekening}
@@ -568,7 +619,9 @@ export default function ApplyFundingScreen() {
 
                 {/* Proposal Bisnis */}
                 <div className="space-y-2">
-                  <Label>Proposal Bisnis <span className="text-red-500">*</span></Label>
+                  <Label>
+                    Proposal Bisnis <span className="text-red-500">*</span>
+                  </Label>
                   <FileUploadBox
                     id="proposal"
                     file={documents.proposal}
@@ -580,7 +633,10 @@ export default function ApplyFundingScreen() {
 
                 {/* Laporan Keuangan */}
                 <div className="space-y-2">
-                  <Label>Laporan Keuangan / Catatan Omzet <span className="text-red-500">*</span></Label>
+                  <Label>
+                    Laporan Keuangan / Catatan Omzet{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <FileUploadBox
                     id="laporan_keuangan"
                     file={documents.laporan_keuangan}
@@ -609,11 +665,16 @@ export default function ApplyFundingScreen() {
           <Card className="border-2 border-blue-200 bg-blue-50">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <AlertCircle className="mt-0.5 h-5 w-5 text-blue-600" />
                 <div className="flex-1">
-                  <p className="text-foreground text-sm font-semibold">Perhatian</p>
+                  <p className="text-foreground text-sm font-semibold">
+                    Perhatian
+                  </p>
                   <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-4 text-xs">
-                    <li>Pastikan semua dokumen yang diunggah jelas dan dapat dibaca</li>
+                    <li>
+                      Pastikan semua dokumen yang diunggah jelas dan dapat
+                      dibaca
+                    </li>
                     <li>Format file: JPG, PNG, atau PDF (Max 5MB per file)</li>
                     <li>Verifikasi akan dilakukan dalam 3-5 hari kerja</li>
                     <li>Dana akan dicairkan setelah pengajuan disetujui</li>
@@ -663,15 +724,33 @@ interface FileUploadBoxProps {
   color: string;
 }
 
-function FileUploadBox({ id, file, onChange, label, color }: FileUploadBoxProps) {
+function FileUploadBox({
+  id,
+  file,
+  onChange,
+  label,
+  color,
+}: FileUploadBoxProps) {
   const colorMap: Record<string, { bg: string; text: string; icon: string }> = {
     blue: { bg: "bg-blue-50", text: "text-blue-600", icon: "bg-blue-100" },
-    purple: { bg: "bg-purple-50", text: "text-purple-600", icon: "bg-purple-100" },
-    indigo: { bg: "bg-indigo-50", text: "text-indigo-600", icon: "bg-indigo-100" },
+    purple: {
+      bg: "bg-purple-50",
+      text: "text-purple-600",
+      icon: "bg-purple-100",
+    },
+    indigo: {
+      bg: "bg-indigo-50",
+      text: "text-indigo-600",
+      icon: "bg-indigo-100",
+    },
     cyan: { bg: "bg-cyan-50", text: "text-cyan-600", icon: "bg-cyan-100" },
     green: { bg: "bg-green-50", text: "text-green-600", icon: "bg-green-100" },
     amber: { bg: "bg-amber-50", text: "text-amber-600", icon: "bg-amber-100" },
-    orange: { bg: "bg-orange-50", text: "text-orange-600", icon: "bg-orange-100" },
+    orange: {
+      bg: "bg-orange-50",
+      text: "text-orange-600",
+      icon: "bg-orange-100",
+    },
   };
 
   const colors = colorMap[color] || colorMap.blue;
@@ -687,7 +766,7 @@ function FileUploadBox({ id, file, onChange, label, color }: FileUploadBoxProps)
       />
       <label
         htmlFor={id}
-        className={`border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed ${colors.bg} p-4 transition-all hover:bg-opacity-70`}
+        className={`border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed ${colors.bg} hover:bg-opacity-70 p-4 transition-all`}
       >
         <div className="flex items-center gap-3">
           <div className={`rounded-xl ${colors.icon} p-2`}>
@@ -702,9 +781,7 @@ function FileUploadBox({ id, file, onChange, label, color }: FileUploadBoxProps)
             </p>
           </div>
         </div>
-        {file && (
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
-        )}
+        {file && <CheckCircle2 className="h-5 w-5 text-green-600" />}
       </label>
     </div>
   );

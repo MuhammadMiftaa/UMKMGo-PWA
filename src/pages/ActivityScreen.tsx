@@ -12,61 +12,16 @@ import {
   History,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
-
-interface Application {
-  id: number;
-  type: string;
-  status: string;
-  submitted_at: string;
-  program: {
-    id: number;
-    title: string;
-    type: string;
-  };
-}
+import { useProgram } from "../contexts/ProgramContext";
 
 export default function ActivityScreen() {
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const { applications, fetchApplications, isLoading } = useProgram();
   const [selectedFilter, setSelectedFilter] = useState("semua");
   const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
-    setApplications([
-      {
-        id: 1,
-        type: "training",
-        status: "screening",
-        submitted_at: "2025-11-17 14:30:00",
-        program: {
-          id: 1,
-          title: "Pelatihan Digital Marketing",
-          type: "training",
-        },
-      },
-      {
-        id: 2,
-        type: "funding",
-        status: "approved",
-        submitted_at: "2025-11-16 10:15:00",
-        program: {
-          id: 2,
-          title: "Pendanaan UMKM Produktif",
-          type: "funding",
-        },
-      },
-      {
-        id: 3,
-        type: "certification",
-        status: "revised",
-        submitted_at: "2025-11-15 09:00:00",
-        program: {
-          id: 3,
-          title: "Sertifikasi ISO 9001",
-          type: "certification",
-        },
-      },
-    ]);
+    fetchApplications();
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -192,7 +147,12 @@ export default function ActivityScreen() {
 
       {/* Applications List */}
       <div className="px-6 py-6">
-        {sortedApplications.length === 0 ? (
+        {isLoading ? (
+          <div className="py-16 text-center">
+            <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
+            <p className="text-muted-foreground mt-4">Memuat data...</p>
+          </div>
+        ) : sortedApplications.length === 0 ? (
           <div className="py-16 text-center">
             <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
               <History className="text-primary h-8 w-8" />
@@ -217,7 +177,7 @@ export default function ActivityScreen() {
                       <div className="mb-3 flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="text-foreground font-semibold">
-                            {app.program.title}
+                            {app.program_name}
                           </h3>
                           <p className="text-muted-foreground mt-1 text-xs">
                             {getTypeLabel(app.type)}
@@ -260,7 +220,7 @@ export default function ActivityScreen() {
         )}
       </div>
 
-      <BottomNavigation unreadCount={0} />
+      <BottomNavigation />
     </div>
   );
 }

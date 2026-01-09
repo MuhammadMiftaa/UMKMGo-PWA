@@ -26,6 +26,10 @@ export interface Program {
   batch_end_date?: string;
   location?: string;
 
+  // Certification specific
+  certification_type?: string;
+  validity_period?: string;
+
   // Funding specific
   min_amount?: number;
   max_amount?: number;

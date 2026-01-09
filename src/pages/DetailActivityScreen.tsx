@@ -16,172 +16,53 @@ import {
   DollarSign,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
-
-interface TimelineItem {
-  id: number;
-  status: string;
-  notes: string;
-  actioned_at: string;
-  actioned_by_name: string;
-}
-
-interface Document {
-  id: number;
-  type: string;
-  file: string | File;
-  fileName?: string;
-}
-
-interface BaseApplication {
-  id: number;
-  status: string;
-  submitted_at: string;
-  program: {
-    id: number;
-    title: string;
-    type: "training" | "certification" | "funding";
-  };
-  documents: Document[];
-  histories: TimelineItem[];
-  userData: {
-    fullname: string;
-    nik: string;
-    gender: string;
-    birth_date: string;
-    phone: string;
-    business_name: string;
-    kartu_type: string;
-    kartu_number: string;
-    nib: string;
-    npwp: string;
-  };
-}
-
-interface TrainingApplication extends BaseApplication {
-  formData: {
-    motivation: string;
-    business_experience: string;
-    learning_objectives: string;
-    availability_notes: string;
-  };
-}
-
-interface CertificationApplication extends BaseApplication {
-  formData: {
-    business_sector: string;
-    product_or_service: string;
-    business_description: string;
-    years_operating: string;
-    current_standards: string;
-    certification_goals: string;
-  };
-}
-
-interface FundingApplication extends BaseApplication {
-  formData: {
-    business_sector: string;
-    business_description: string;
-    years_operating: string;
-    requested_amount: string;
-    fund_purpose: string;
-    business_plan: string;
-    revenue_projection: string;
-    monthly_revenue: string;
-    requested_tenure_months: string;
-    collateral_description: string;
-  };
-}
-
-type Application =
-  | TrainingApplication
-  | CertificationApplication
-  | FundingApplication;
+import { useProgram } from "../contexts/ProgramContext";
+import type {
+  ApplicationDetail,
+  ApplicationDocument,
+} from "../contexts/ProgramContext";
 
 export default function DetailActivityScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [application, setApplication] = useState<Application | null>(null);
+  const { getApplicationDetail } = useProgram();
+  const [application, setApplication] = useState<ApplicationDetail | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate fetching data
-    // In real app, fetch from API based on id
-    setTimeout(() => {
-      // Mock data - in production, this would come from API
-      const mockApplication: Application = {
-        id: 1,
-        status: "revised",
-        submitted_at: "2025-11-17 14:30:00",
-        program: {
-          id: 1,
-          title: "Pelatihan Digital Marketing",
-          type: "training", // Change to "certification" or "funding" to test
-        },
-        userData: {
-          fullname: "Akbar Chalay",
-          nik: "1234567890987654",
-          gender: "Laki-laki",
-          birth_date: "2008-08-06",
-          phone: "81234567890",
-          business_name: "PT Semua Teman",
-          kartu_type: "Kartu Afirmatif",
-          kartu_number: "1234567890",
-          nib: "1234567890123",
-          npwp: "12.345.678.9-012.000",
-        },
-        documents: [
-          { id: 1, type: "KTP", file: "ktp.pdf" },
-          { id: 2, type: "Portfolio", file: "portfolio.pdf" },
-        ],
-        formData: {
-          motivation:
-            "Saya ingin meningkatkan kemampuan digital marketing untuk mengembangkan bisnis saya.",
-          business_experience:
-            "Sudah menjalankan usaha selama 2 tahun di bidang kuliner.",
-          learning_objectives:
-            "Menguasai social media marketing dan digital advertising.",
-          availability_notes:
-            "Tersedia setiap hari Senin-Jumat pukul 09.00-17.00.",
-        },
-        histories: [
-          {
-            id: 1,
-            status: "submit",
-            notes: "Pengajuan berhasil dikirim",
-            actioned_at: "2025-11-17 14:30:00",
-            actioned_by_name: "Sistem",
-          },
-          {
-            id: 2,
-            status: "screening",
-            notes: "Pengajuan sedang diproses oleh tim",
-            actioned_at: "2025-11-17 16:00:00",
-            actioned_by_name: "Admin Screening",
-          },
-          {
-            id: 3,
-            status: "revise",
-            notes: "Mohon perbaiki dokumen KTP, gambar kurang jelas",
-            actioned_at: "2025-11-18 10:00:00",
-            actioned_by_name: "Admin Screening",
-          },
-        ],
-      } as TrainingApplication;
-
-      setApplication(mockApplication);
-      setLoading(false);
-    }, 500);
+    if (id) {
+      fetchApplicationDetail();
+    }
   }, [id]);
+
+  const fetchApplicationDetail = async () => {
+    if (!id) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getApplicationDetail(parseInt(id));
+      setApplication(data);
+    } catch (err) {
+      console.error("Error fetching application detail:", err);
+      setError("Gagal memuat detail pengajuan");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     const icons: { [key: string]: { icon: React.ReactNode; color: string } } = {
-      submit: { icon: <CheckCircle2 size={20} />, color: "text-blue-600" },
       screening: { icon: <Clock size={20} />, color: "text-amber-600" },
-      revise: { icon: <AlertTriangle size={20} />, color: "text-orange-600" },
-      approved: { icon: <CheckCircle2 size={20} />, color: "text-green-600" },
+      revision: { icon: <AlertTriangle size={20} />, color: "text-orange-600" },
+      final: { icon: <CheckCircle2 size={20} />, color: "text-green-600" },
       rejected: { icon: <AlertTriangle size={20} />, color: "text-red-600" },
     };
-    return icons[status] || icons["submit"];
+    return icons[status] || icons["screening"];
   };
 
   const getStatusConfig = (status: string) => {
@@ -196,15 +77,6 @@ export default function DetailActivityScreen() {
         iconBg: string;
       };
     } = {
-      submit: {
-        badge: "Terkirim",
-        badgeColor: "bg-blue-100 text-blue-700",
-        title: "Pengajuan Terkirim",
-        description: "Pengajuan Anda sedang menunggu untuk diproses",
-        icon: <CheckCircle2 className="h-6 w-6 text-blue-600" />,
-        bgColor: "from-blue-50 to-cyan-50 border-blue-200",
-        iconBg: "bg-blue-100",
-      },
       screening: {
         badge: "Dalam Proses",
         badgeColor: "bg-amber-100 text-amber-700",
@@ -215,7 +87,7 @@ export default function DetailActivityScreen() {
         bgColor: "from-amber-50 to-yellow-50 border-amber-200",
         iconBg: "bg-amber-100",
       },
-      revise: {
+      revision: {
         badge: "Perlu Revisi",
         badgeColor: "bg-orange-100 text-orange-700",
         title: "Perlu Revisi",
@@ -225,7 +97,7 @@ export default function DetailActivityScreen() {
         bgColor: "from-orange-50 to-amber-50 border-orange-200",
         iconBg: "bg-orange-100",
       },
-      approved: {
+      final: {
         badge: "Disetujui",
         badgeColor: "bg-green-100 text-green-700",
         title: "Pengajuan Disetujui",
@@ -244,7 +116,7 @@ export default function DetailActivityScreen() {
         iconBg: "bg-red-100",
       },
     };
-    return configs[status] || configs["submit"];
+    return configs[status] || configs["screening"];
   };
 
   const getProgramTypeLabel = (type: string) => {
@@ -279,9 +151,13 @@ export default function DetailActivityScreen() {
     }).format(Number(number));
   };
 
-  const handleDownload = (doc: Document) => {
-    // In production, implement actual download
-    alert(`Downloading ${doc.type}...`);
+  const handleDownload = (doc: ApplicationDocument) => {
+    // Open the document file URL in new tab
+    if (doc.file) {
+      window.open(doc.file, "_blank");
+    } else {
+      alert(`Document ${doc.type} tidak tersedia`);
+    }
   };
 
   if (loading) {
@@ -290,6 +166,19 @@ export default function DetailActivityScreen() {
         <div className="text-center">
           <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
           <p className="text-muted-foreground mt-4">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-red-500">{error}</p>
+          <Button onClick={() => navigate("/activity")} className="mt-4">
+            Kembali
+          </Button>
         </div>
       </div>
     );
@@ -461,219 +350,187 @@ export default function DetailActivityScreen() {
           </CardContent>
         </Card> */}
 
-        {/* Data Usaha */}
+        {/* Program Info */}
         <Card className="mb-6 border-blue-100">
           <CardContent className="p-5">
             <div className="mb-4 flex items-center gap-2">
               <Briefcase size={20} className="text-primary" />
-              <h2 className="text-foreground font-bold">Data Usaha</h2>
+              <h2 className="text-foreground font-bold">Informasi Program</h2>
             </div>
             <div className="space-y-3">
               <div className="flex justify-between border-b border-blue-50 pb-2">
                 <span className="text-muted-foreground text-sm">
-                  Nama Usaha
+                  Nama Program
                 </span>
                 <span className="text-foreground text-sm font-semibold">
-                  {application.userData.business_name}
+                  {application.program.title}
                 </span>
               </div>
               <div className="flex justify-between border-b border-blue-50 pb-2">
                 <span className="text-muted-foreground text-sm">
-                  Kartu UMKM
+                  Penyelenggara
                 </span>
                 <span className="text-foreground text-sm font-semibold">
-                  {application.userData.kartu_type}
+                  {application.program.provider}
                 </span>
               </div>
-              <div className="flex justify-between border-b border-blue-50 pb-2">
-                <span className="text-muted-foreground text-sm">
-                  Nomor Kartu
-                </span>
-                <span className="text-foreground text-sm font-semibold">
-                  {application.userData.kartu_number}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-blue-50 pb-2">
-                <span className="text-muted-foreground text-sm">NIB</span>
-                <span className="text-foreground text-sm font-semibold">
-                  {application.userData.nib}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">NPWP</span>
-                <span className="text-foreground text-sm font-semibold">
-                  {application.userData.npwp}
-                </span>
-              </div>
+              {application.program.location && (
+                <div className="flex justify-between border-b border-blue-50 pb-2">
+                  <span className="text-muted-foreground text-sm">Lokasi</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    {application.program.location}
+                  </span>
+                </div>
+              )}
+              {application.program.batch && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground text-sm">Batch</span>
+                  <span className="text-foreground text-sm font-semibold">
+                    Batch {application.program.batch}
+                  </span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Program Specific Data */}
-        {application.program.type === "training" && (
-          <Card className="mb-6 border-blue-100">
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-primary" />
-                <h2 className="text-foreground font-bold">
-                  Informasi Pelatihan
-                </h2>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-muted-foreground mb-1 text-sm font-medium">
-                    Motivasi Mengikuti Pelatihan
-                  </p>
-                  <p className="text-foreground text-sm">
-                    {(application as TrainingApplication).formData.motivation}
-                  </p>
-                </div>
-                {(application as TrainingApplication).formData
-                  .business_experience && (
-                  <div>
-                    <p className="text-muted-foreground mb-1 text-sm font-medium">
-                      Pengalaman Menjalankan Usaha
-                    </p>
-                    <p className="text-foreground text-sm">
-                      {
-                        (application as TrainingApplication).formData
-                          .business_experience
-                      }
-                    </p>
-                  </div>
-                )}
-                {(application as TrainingApplication).formData
-                  .learning_objectives && (
-                  <div>
-                    <p className="text-muted-foreground mb-1 text-sm font-medium">
-                      Target Pembelajaran
-                    </p>
-                    <p className="text-foreground text-sm">
-                      {
-                        (application as TrainingApplication).formData
-                          .learning_objectives
-                      }
-                    </p>
-                  </div>
-                )}
-                {(application as TrainingApplication).formData
-                  .availability_notes && (
-                  <div>
-                    <p className="text-muted-foreground mb-1 text-sm font-medium">
-                      Catatan Ketersediaan
-                    </p>
-                    <p className="text-foreground text-sm">
-                      {
-                        (application as TrainingApplication).formData
-                          .availability_notes
-                      }
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {application.program.type === "certification" && (
-          <>
+        {application.program.type === "training" &&
+          application.training_data && (
             <Card className="mb-6 border-blue-100">
               <CardContent className="p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <FileText size={20} className="text-primary" />
-                  <h2 className="text-foreground font-bold">Informasi Usaha</h2>
+                  <h2 className="text-foreground font-bold">
+                    Informasi Pelatihan
+                  </h2>
                 </div>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-sm font-medium">
-                        Sektor Usaha
-                      </p>
-                      <p className="text-foreground text-sm font-semibold">
-                        {
-                          (application as CertificationApplication).formData
-                            .business_sector
-                        }
-                      </p>
-                    </div>
-                    {(application as CertificationApplication).formData
-                      .years_operating && (
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-sm font-medium">
-                          Lama Usaha
-                        </p>
-                        <p className="text-foreground text-sm font-semibold">
-                          {
-                            (application as CertificationApplication).formData
-                              .years_operating
-                          }{" "}
-                          Tahun
-                        </p>
-                      </div>
-                    )}
-                  </div>
                   <div>
                     <p className="text-muted-foreground mb-1 text-sm font-medium">
-                      Produk/Layanan yang Disertifikasi
-                    </p>
-                    <p className="text-foreground text-sm font-semibold">
-                      {
-                        (application as CertificationApplication).formData
-                          .product_or_service
-                      }
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground mb-1 text-sm font-medium">
-                      Deskripsi Usaha
+                      Motivasi Mengikuti Pelatihan
                     </p>
                     <p className="text-foreground text-sm">
-                      {
-                        (application as CertificationApplication).formData
-                          .business_description
-                      }
+                      {application.training_data.motivation}
                     </p>
                   </div>
-                  {(application as CertificationApplication).formData
-                    .current_standards && (
+                  {application.training_data.business_experience && (
                     <div>
                       <p className="text-muted-foreground mb-1 text-sm font-medium">
-                        Standar yang Sudah Diterapkan
+                        Pengalaman Menjalankan Usaha
                       </p>
                       <p className="text-foreground text-sm">
-                        {
-                          (application as CertificationApplication).formData
-                            .current_standards
-                        }
+                        {application.training_data.business_experience}
+                      </p>
+                    </div>
+                  )}
+                  {application.training_data.learning_objectives && (
+                    <div>
+                      <p className="text-muted-foreground mb-1 text-sm font-medium">
+                        Target Pembelajaran
+                      </p>
+                      <p className="text-foreground text-sm">
+                        {application.training_data.learning_objectives}
+                      </p>
+                    </div>
+                  )}
+                  {application.training_data.availability_notes && (
+                    <div>
+                      <p className="text-muted-foreground mb-1 text-sm font-medium">
+                        Catatan Ketersediaan
+                      </p>
+                      <p className="text-foreground text-sm">
+                        {application.training_data.availability_notes}
                       </p>
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            <Card className="mb-6 border-blue-100">
-              <CardContent className="p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <Award size={20} className="text-primary" />
-                  <h2 className="text-foreground font-bold">
-                    Tujuan Sertifikasi
-                  </h2>
-                </div>
-                <div>
-                  <p className="text-foreground text-sm">
-                    {
-                      (application as CertificationApplication).formData
-                        .certification_goals
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
+        {application.program.type === "certification" &&
+          application.certification_data && (
+            <>
+              <Card className="mb-6 border-blue-100">
+                <CardContent className="p-5">
+                  <div className="mb-4 flex items-center gap-2">
+                    <FileText size={20} className="text-primary" />
+                    <h2 className="text-foreground font-bold">
+                      Informasi Usaha
+                    </h2>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-sm font-medium">
+                          Sektor Usaha
+                        </p>
+                        <p className="text-foreground text-sm font-semibold">
+                          {application.certification_data.business_sector}
+                        </p>
+                      </div>
+                      {application.certification_data.years_operating > 0 && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-sm font-medium">
+                            Lama Usaha
+                          </p>
+                          <p className="text-foreground text-sm font-semibold">
+                            {application.certification_data.years_operating}{" "}
+                            Tahun
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground mb-1 text-sm font-medium">
+                        Produk/Layanan yang Disertifikasi
+                      </p>
+                      <p className="text-foreground text-sm font-semibold">
+                        {application.certification_data.product_or_service}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground mb-1 text-sm font-medium">
+                        Deskripsi Usaha
+                      </p>
+                      <p className="text-foreground text-sm">
+                        {application.certification_data.business_description}
+                      </p>
+                    </div>
+                    {application.certification_data.current_standards && (
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-sm font-medium">
+                          Standar yang Sudah Diterapkan
+                        </p>
+                        <p className="text-foreground text-sm">
+                          {application.certification_data.current_standards}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-        {application.program.type === "funding" && (
+              <Card className="mb-6 border-blue-100">
+                <CardContent className="p-5">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Award size={20} className="text-primary" />
+                    <h2 className="text-foreground font-bold">
+                      Tujuan Sertifikasi
+                    </h2>
+                  </div>
+                  <div>
+                    <p className="text-foreground text-sm">
+                      {application.certification_data.certification_goals}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+        {application.program.type === "funding" && application.funding_data && (
           <>
             <Card className="mb-6 border-blue-100">
               <CardContent className="p-5">
@@ -688,38 +545,28 @@ export default function DetailActivityScreen() {
                         Sektor Usaha
                       </p>
                       <p className="text-foreground text-sm font-semibold">
-                        {
-                          (application as FundingApplication).formData
-                            .business_sector
-                        }
+                        {application.funding_data.business_sector}
                       </p>
                     </div>
-                    {(application as FundingApplication).formData
-                      .years_operating && (
+                    {application.funding_data.years_operating > 0 && (
                       <div>
                         <p className="text-muted-foreground mb-1 text-sm font-medium">
                           Lama Usaha
                         </p>
                         <p className="text-foreground text-sm font-semibold">
-                          {
-                            (application as FundingApplication).formData
-                              .years_operating
-                          }{" "}
-                          Tahun
+                          {application.funding_data.years_operating} Tahun
                         </p>
                       </div>
                     )}
                   </div>
-                  {(application as FundingApplication).formData
-                    .monthly_revenue && (
+                  {application.funding_data.monthly_revenue > 0 && (
                     <div>
                       <p className="text-muted-foreground mb-1 text-sm font-medium">
                         Omzet Bulanan
                       </p>
                       <p className="text-foreground text-sm font-semibold">
                         {formatCurrency(
-                          (application as FundingApplication).formData
-                            .monthly_revenue,
+                          application.funding_data.monthly_revenue.toString(),
                         )}
                       </p>
                     </div>
@@ -729,10 +576,7 @@ export default function DetailActivityScreen() {
                       Deskripsi Usaha
                     </p>
                     <p className="text-foreground text-sm">
-                      {
-                        (application as FundingApplication).formData
-                          .business_description
-                      }
+                      {application.funding_data.business_description}
                     </p>
                   </div>
                 </div>
@@ -755,8 +599,7 @@ export default function DetailActivityScreen() {
                       </p>
                       <p className="text-lg font-bold text-green-600">
                         {formatCurrency(
-                          (application as FundingApplication).formData
-                            .requested_amount,
+                          application.funding_data.requested_amount.toString(),
                         )}
                       </p>
                     </div>
@@ -765,11 +608,7 @@ export default function DetailActivityScreen() {
                         Tenor
                       </p>
                       <p className="text-foreground text-sm font-semibold">
-                        {
-                          (application as FundingApplication).formData
-                            .requested_tenure_months
-                        }{" "}
-                        Bulan
+                        {application.funding_data.requested_tenure_months} Bulan
                       </p>
                     </div>
                   </div>
@@ -778,51 +617,38 @@ export default function DetailActivityScreen() {
                       Tujuan Penggunaan Dana
                     </p>
                     <p className="text-foreground text-sm">
-                      {
-                        (application as FundingApplication).formData
-                          .fund_purpose
-                      }
+                      {application.funding_data.fund_purpose}
                     </p>
                   </div>
-                  {(application as FundingApplication).formData
-                    .business_plan && (
+                  {application.funding_data.business_plan && (
                     <div>
                       <p className="text-muted-foreground mb-1 text-sm font-medium">
                         Rencana Bisnis
                       </p>
                       <p className="text-foreground text-sm">
-                        {
-                          (application as FundingApplication).formData
-                            .business_plan
-                        }
+                        {application.funding_data.business_plan}
                       </p>
                     </div>
                   )}
-                  {(application as FundingApplication).formData
-                    .revenue_projection && (
+                  {application.funding_data.revenue_projection > 0 && (
                     <div>
                       <p className="text-muted-foreground mb-1 text-sm font-medium">
                         Proyeksi Omzet
                       </p>
                       <p className="text-foreground text-sm font-semibold">
                         {formatCurrency(
-                          (application as FundingApplication).formData
-                            .revenue_projection,
+                          application.funding_data.revenue_projection.toString(),
                         )}
                       </p>
                     </div>
                   )}
-                  {(application as FundingApplication).formData
-                    .collateral_description && (
+                  {application.funding_data.collateral_description && (
                     <div>
                       <p className="text-muted-foreground mb-1 text-sm font-medium">
                         Agunan/Jaminan
                       </p>
                       <p className="text-foreground text-sm">
-                        {
-                          (application as FundingApplication).formData
-                            .collateral_description
-                        }
+                        {application.funding_data.collateral_description}
                       </p>
                     </div>
                   )}
@@ -854,9 +680,7 @@ export default function DetailActivityScreen() {
                           {doc.type}
                         </p>
                         <p className="text-muted-foreground text-xs">
-                          {typeof doc.file === "string"
-                            ? doc.file
-                            : doc.file.name}
+                          {new Date(doc.created_at).toLocaleDateString("id-ID")}
                         </p>
                       </div>
                     </div>
@@ -898,11 +722,9 @@ export default function DetailActivityScreen() {
                         </div>
                         <div className="flex-1">
                           <p className="text-foreground font-semibold">
-                            {item.notes}
+                            {item.notes || item.status}
                           </p>
                           <div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
-                            <span>{item.actioned_by_name}</span>
-                            <span>•</span>
                             <span>
                               {new Date(item.actioned_at).toLocaleDateString(
                                 "id-ID",
@@ -926,8 +748,8 @@ export default function DetailActivityScreen() {
           </div>
         </div>
 
-        {/* Action Button - Only show if status is revise */}
-        {application.status === "revised" && (
+        {/* Action Button - Only show if status is revision */}
+        {application.status === "revision" && (
           <div className="mt-8">
             <Button
               variant="gradient"
@@ -941,7 +763,7 @@ export default function DetailActivityScreen() {
         )}
       </div>
 
-      <BottomNavigation unreadCount={0} />
+      <BottomNavigation />
     </div>
   );
 }

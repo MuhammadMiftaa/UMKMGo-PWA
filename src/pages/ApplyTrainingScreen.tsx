@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
 import { Card, CardContent } from "../components/ui/Card";
@@ -12,24 +12,8 @@ import {
   Briefcase,
   AlertCircle,
 } from "lucide-react";
-
-interface UserData {
-  fullname: string;
-  business_name: string;
-  nik: string;
-  gender: string;
-  birth_date: string;
-  phone: string;
-  address: string;
-  province: string;
-  city: string;
-  district: string;
-  postal_code: string;
-  nib: string;
-  npwp: string;
-  kartu_type: string;
-  kartu_number: string;
-}
+import { useProgram } from "../contexts/ProgramContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface FormData {
   motivation: string;
@@ -40,9 +24,10 @@ interface FormData {
 
 export default function ApplyTrainingScreen() {
   const navigate = useNavigate();
-  // const { id } = useParams();
+  const { id } = useParams();
+  const { applyTraining } = useProgram();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [formData, setFormData] = useState<FormData>({
     motivation: "",
     business_experience: "",
@@ -54,31 +39,6 @@ export default function ApplyTrainingScreen() {
     portfolio: null as File | null,
   });
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("userData");
-    let data;
-    if (stored) {
-      data = JSON.parse(stored);
-    }
-    setUserData({
-      fullname: data?.fullname || "Akbar Chalay",
-      business_name: data?.businessName || "PT Semua Teman",
-      nik: data?.nik || "1234567890987654",
-      gender: data?.gender === "male" ? "Laki-laki" : "Perempuan",
-      birth_date: data?.birthDate || "2008-08-06",
-      phone: data?.phone || "81234567890",
-      address: data?.address || "Jl. Ketintang No. 123",
-      province: "Jawa Timur",
-      city: "Surabaya",
-      district: data?.district || "Ketintang",
-      postal_code: data?.postalCode || "60210",
-      nib: "-",
-      npwp: "-",
-      kartu_type: data?.kartuType || "Kartu Afirmatif",
-      kartu_number: data?.kartuNumber || "1234567890",
-    });
-  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -96,29 +56,63 @@ export default function ApplyTrainingScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
     setError("");
 
-    if (!formData.motivation.trim()) {
-      setError("Motivasi harus diisi");
-      setLoading(false);
-      return;
-    }
+    try {
+      if (!formData.motivation.trim()) {
+        setError("Motivasi harus diisi");
+        setLoading(false);
+        return;
+      }
 
-    if (!documents.ktp) {
-      setError("Dokumen KTP harus diupload");
-      setLoading(false);
-      return;
-    }
+      if (!documents.ktp) {
+        setError("Dokumen KTP harus diupload");
+        setLoading(false);
+        return;
+      }
 
-    setTimeout(() => {
+      // Convert files to base64
+      const ktpBase64 = await fileToBase64(documents.ktp);
+      const portfolioBase64 = documents.portfolio
+        ? await fileToBase64(documents.portfolio)
+        : undefined;
+
+      // Submit to API
+      await applyTraining({
+        program_id: parseInt(id || "0"),
+        motivation: formData.motivation,
+        business_experience: formData.business_experience,
+        learning_objectives: formData.learning_objectives,
+        availability_notes: formData.availability_notes,
+        documents: {
+          ktp: ktpBase64,
+          portfolio: portfolioBase64,
+        },
+      });
+
       alert("Pengajuan pelatihan berhasil dikirim!");
       navigate("/activity");
-    }, 1000);
+    } catch (err) {
+      console.error("Error submitting application:", err);
+      setError(err instanceof Error ? err.message : "Gagal mengirim pengajuan");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!userData) {
+  if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
@@ -174,29 +168,13 @@ export default function ApplyTrainingScreen() {
                     Nama Lengkap
                   </span>
                   <span className="text-foreground text-sm font-semibold">
-                    {userData.fullname}
+                    {user.name}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NIK</span>
+                  <span className="text-muted-foreground text-sm">Email</span>
                   <span className="text-foreground text-sm font-semibold">
-                    {userData.nik}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">
-                    Jenis Kelamin
-                  </span>
-                  <span className="text-foreground text-sm font-semibold">
-                    {userData.gender}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">
-                    Tanggal Lahir
-                  </span>
-                  <span className="text-foreground text-sm font-semibold">
-                    {userData.birth_date}
+                    {user.email || "-"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -204,7 +182,7 @@ export default function ApplyTrainingScreen() {
                     Nomor Telepon
                   </span>
                   <span className="text-foreground text-sm font-semibold">
-                    +62{userData.phone}
+                    +62{user.phone || "-"}
                   </span>
                 </div>
               </div>
@@ -226,7 +204,7 @@ export default function ApplyTrainingScreen() {
                     Nama Usaha
                   </span>
                   <span className="text-foreground text-sm font-semibold">
-                    {userData.business_name}
+                    {user.business_name || "-"}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-blue-50 pb-2">
@@ -234,27 +212,11 @@ export default function ApplyTrainingScreen() {
                     Kartu UMKM
                   </span>
                   <span className="text-foreground text-sm font-semibold">
-                    {userData.kartu_type}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">
-                    Nomor Kartu
-                  </span>
-                  <span className="text-foreground text-sm font-semibold">
-                    {userData.kartu_number}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-blue-50 pb-2">
-                  <span className="text-muted-foreground text-sm">NIB</span>
-                  <span className="text-foreground text-sm font-semibold">
-                    {userData.nib}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground text-sm">NPWP</span>
-                  <span className="text-foreground text-sm font-semibold">
-                    {userData.npwp}
+                    {user.kartu_type === "afirmatif"
+                      ? "Kartu Afirmatif"
+                      : user.kartu_type === "produktif"
+                        ? "Kartu Produktif"
+                        : "-"}
                   </span>
                 </div>
               </div>

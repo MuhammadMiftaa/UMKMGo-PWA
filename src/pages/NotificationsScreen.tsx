@@ -278,7 +278,7 @@ export default function NotificationsScreen() {
         )}
       </div>
 
-      <BottomNavigation unreadCount={unreadCount} />
+      <BottomNavigation />
     </div>
   );
 }

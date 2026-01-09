@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../components/ui/Card";
-import { ArrowLeft, Eye, Calendar, Search, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, Calendar, Search } from "lucide-react";
 import { Input } from "../components/ui/Input";
 import BottomNavigation from "../components/BottomNavigation";
 import { useNews } from "../contexts/NewsContext";
 import type { News } from "../contexts/NewsContext";
+import Loader from "@/components/ui/Loader";
 
 export default function NewsListScreen() {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ export default function NewsListScreen() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+          <Loader />
           <p className="text-muted-foreground mt-4">Memuat berita...</p>
         </div>
       </div>

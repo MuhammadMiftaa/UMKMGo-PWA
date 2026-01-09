@@ -11,10 +11,10 @@ import {
   CheckCheck,
   Send,
   FileCheck,
-  Loader2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import { useNotification } from "../contexts/NotificationContext";
+import Loader from "@/components/ui/Loader";
 
 export default function NotificationsScreen() {
   const navigate = useNavigate();
@@ -175,7 +175,7 @@ export default function NotificationsScreen() {
       {isLoading && (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <Loader2 className="text-primary mx-auto h-10 w-10 animate-spin" />
+            <Loader />
             <p className="text-muted-foreground mt-4">Memuat notifikasi...</p>
           </div>
         </div>

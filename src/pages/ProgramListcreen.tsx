@@ -12,12 +12,12 @@ import {
   Filter,
   Search,
   Building2,
-  Loader2,
 } from "lucide-react";
 import { Input } from "../components/ui/Input";
 import BottomNavigation from "../components/BottomNavigation";
 import { useProgram } from "../contexts/ProgramContext";
 import type { Program } from "../contexts/ProgramContext";
+import Loader from "@/components/ui/Loader";
 
 export default function ProgramListScreen() {
   const navigate = useNavigate();
@@ -117,7 +117,7 @@ export default function ProgramListScreen() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+          <Loader />
           <p className="text-muted-foreground mt-4">Memuat program...</p>
         </div>
       </div>

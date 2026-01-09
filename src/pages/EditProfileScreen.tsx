@@ -13,10 +13,10 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
-  Loader2,
 } from "lucide-react";
 import { useProfile, type ProfileUpdateData } from "../contexts/ProfileContext";
 import { useAuth } from "../contexts/AuthContext";
+import Loader from "@/components/ui/Loader";
 
 interface FormData {
   fullname: string;
@@ -199,7 +199,7 @@ export default function EditProfileScreen() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+          <Loader />
           <p className="text-muted-foreground mt-4">Memuat data...</p>
         </div>
       </div>

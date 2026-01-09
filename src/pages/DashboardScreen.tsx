@@ -11,12 +11,12 @@ import {
   TrendingUp,
   Eye,
   Calendar,
-  Loader2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import { useNews } from "../contexts/NewsContext";
 import { useDashboard } from "../contexts/DashboardContext";
 import type { News } from "../contexts/NewsContext";
+import Loader from "@/components/ui/Loader";
 
 export default function DashboardScreen() {
   const navigate = useNavigate();
@@ -308,7 +308,7 @@ export default function DashboardScreen() {
 
         {isNewsLoading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="text-primary h-8 w-8 animate-spin" />
+            <Loader />
           </div>
         ) : recentNews.length === 0 ? (
           <Card className="border-blue-100">

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
+import { ConfirmModal } from "../components/ui/Modal";
+import { Alert } from "../components/ui/Alert";
 import {
   ArrowLeft,
   LogOut,
@@ -12,13 +14,14 @@ import {
   MapPin,
   Briefcase,
   Edit,
-  Loader2,
   AlertCircle,
   Check,
+  Loader2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import { useProfile, type DocumentType } from "../contexts/ProfileContext";
 import { useAuth } from "../contexts/AuthContext";
+import Loader from "@/components/ui/Loader";
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -33,6 +36,15 @@ export default function ProfileScreen() {
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Modal states
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message?: string;
+  }>({ isOpen: false, type: "info", title: "" });
 
   // Fetch profile on mount
   useEffect(() => {
@@ -56,6 +68,10 @@ export default function ProfileScreen() {
   }, [uploadError]);
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     navigate("/login");
   };
@@ -159,7 +175,7 @@ export default function ProfileScreen() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white pb-24">
         <div className="text-center">
-          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+          <Loader />
           <p className="text-muted-foreground mt-4">Memuat profil...</p>
         </div>
         <BottomNavigation />
@@ -449,6 +465,28 @@ export default function ProfileScreen() {
           </Button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Keluar dari Akun"
+        message="Apakah Anda yakin ingin keluar dari akun? Anda perlu login kembali untuk mengakses aplikasi."
+        confirmText="Ya, Keluar"
+        cancelText="Batal"
+        variant="danger"
+        icon={<LogOut size={24} />}
+      />
+
+      {/* Alert for upload status */}
+      <Alert
+        isOpen={alertConfig.isOpen}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+      />
 
       <BottomNavigation />
     </div>

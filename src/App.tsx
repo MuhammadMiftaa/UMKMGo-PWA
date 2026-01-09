@@ -25,6 +25,97 @@ import DetailNewsScreen from "./pages/DetailNewsScreen";
 import ReviseApplicationScreen from "./pages/ReviseApplicationScreen";
 import CompleteRegisterData from "./pages/CompleteRegisterData";
 
+// Splash Screen Component
+function SplashScreen() {
+  const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (progress === 100) {
+      setTimeout(() => setFadeOut(true), 200);
+    }
+  }, [progress]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex min-h-screen flex-col items-center justify-center bg-white transition-opacity duration-500 ${
+        fadeOut ? "opacity-0" : "opacity-100"
+      }`}
+    >
+      {/* Background Decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="from-primary/5 via-accent/5 to-secondary/5 absolute -top-40 -right-40 h-80 w-80 rounded-full bg-linear-to-br blur-3xl" />
+        <div className="from-secondary/5 via-accent/5 to-primary/5 absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-linear-to-tr blur-3xl" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center px-8">
+        {/* Logo */}
+        <div className="mb-8 animate-pulse">
+          <div className="relative">
+            <div className="from-primary via-accent to-secondary flex h-24 w-24 items-center justify-center rounded-3xl bg-linear-to-br shadow-lg shadow-blue-500/25">
+              <img
+                src="/logo.png"
+                alt="UMKMGo Logo"
+                className="h-16 w-16 object-contain brightness-10000"
+                onError={(e) => {
+                  // Fallback if logo doesn't exist
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+            {/* Animated ring */}
+            <div
+              className="border-primary/30 absolute -inset-2 animate-spin rounded-3xl border-2 border-dashed"
+              style={{ animationDuration: "3s" }}
+            />
+          </div>
+        </div>
+
+        {/* App Name */}
+        <h1 className="from-primary via-accent to-secondary mb-2 bg-linear-to-r bg-clip-text text-4xl font-bold tracking-tight text-transparent">
+          UMKMGo
+        </h1>
+        <p className="mb-8 text-sm font-medium text-gray-500">
+          Solusi Digital untuk UMKM Indonesia
+        </p>
+
+        {/* Progress Bar */}
+        <div className="w-48">
+          <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="from-primary via-accent to-secondary h-full rounded-full bg-linear-to-r transition-all duration-100 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="mt-3 text-center text-xs font-medium text-gray-400">
+            {progress < 100 ? "Memuat aplikasi..." : "Selesai!"}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-8 text-center">
+        <p className="text-xs text-gray-400">Versi 1.0.0</p>
+      </div>
+    </div>
+  );
+}
+
 // Protected Route Component
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -45,20 +136,13 @@ function App() {
 
   useEffect(() => {
     // Simulate app initialization
-    setIsLoading(false);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="from-primary to-accent flex min-h-screen items-center justify-center bg-linear-to-br">
-        <div className="text-center">
-          <div className="text-primary-foreground mb-4 text-4xl font-bold">
-            UMKMGo
-          </div>
-          <div className="border-primary-foreground mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
-        </div>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   return (

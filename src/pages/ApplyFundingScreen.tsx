@@ -4,6 +4,8 @@ import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent } from "../components/ui/Card";
+import { ConfirmModal } from "../components/ui/Modal";
+import { Alert } from "../components/ui/Alert";
 import {
   ArrowLeft,
   Upload,
@@ -13,6 +15,7 @@ import {
   Briefcase,
   AlertCircle,
   DollarSign,
+  Send,
 } from "lucide-react";
 import { useProgram } from "../contexts/ProgramContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -72,6 +75,10 @@ export default function ApplyFundingScreen() {
     dokumen_agunan: null,
   });
   const [error, setError] = useState("");
+
+  // Modal & Alert states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   // Load profile documents on mount
   useEffect(() => {
@@ -271,8 +278,10 @@ export default function ApplyFundingScreen() {
         },
       });
 
-      alert("Pengajuan pendanaan berhasil dikirim!");
-      navigate("/activity");
+      setShowSuccessAlert(true);
+      setTimeout(() => {
+        navigate("/activity");
+      }, 2000);
     } catch (err) {
       console.error("Error submitting application:", err);
       setError(err instanceof Error ? err.message : "Gagal mengirim pengajuan");
@@ -766,7 +775,7 @@ export default function ApplyFundingScreen() {
           {/* Submit Button */}
           <div className="space-y-3">
             <Button
-              onClick={handleSubmit}
+              onClick={() => setShowConfirmModal(true)}
               disabled={loading}
               variant="gradient"
               size="lg"
@@ -790,6 +799,33 @@ export default function ApplyFundingScreen() {
           </div>
         </div>
       </div>
+
+      {/* Confirm Submit Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={() => {
+          setShowConfirmModal(false);
+          handleSubmit();
+        }}
+        title="Kirim Pengajuan Pendanaan"
+        message="Pastikan semua data dan dokumen yang Anda masukkan sudah benar. Pengajuan yang sudah dikirim tidak dapat diubah."
+        confirmText="Ya, Kirim"
+        cancelText="Periksa Lagi"
+        variant="info"
+        icon={<Send size={24} />}
+        isLoading={loading}
+      />
+
+      {/* Success Alert */}
+      <Alert
+        isOpen={showSuccessAlert}
+        onClose={() => setShowSuccessAlert(false)}
+        type="success"
+        title="Pengajuan Berhasil Dikirim"
+        message="Pengajuan pendanaan Anda sedang diproses. Anda akan diarahkan ke halaman aktivitas."
+        duration={3000}
+      />
     </div>
   );
 }

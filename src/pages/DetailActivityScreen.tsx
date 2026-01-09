@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 import {
   ArrowLeft,
   Download,
@@ -31,6 +32,8 @@ export default function DetailActivityScreen() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDocumentAlert, setShowDocumentAlert] = useState(false);
+  const [documentAlertMessage, setDocumentAlertMessage] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -156,7 +159,8 @@ export default function DetailActivityScreen() {
     if (doc.file) {
       window.open(doc.file, "_blank");
     } else {
-      alert(`Document ${doc.type} tidak tersedia`);
+      setDocumentAlertMessage(`Dokumen ${doc.type} tidak tersedia`);
+      setShowDocumentAlert(true);
     }
   };
 
@@ -762,6 +766,16 @@ export default function DetailActivityScreen() {
           </div>
         )}
       </div>
+
+      {/* Document Not Available Alert */}
+      <Alert
+        isOpen={showDocumentAlert}
+        onClose={() => setShowDocumentAlert(false)}
+        type="warning"
+        title="Dokumen Tidak Tersedia"
+        message={documentAlertMessage}
+        duration={3000}
+      />
 
       <BottomNavigation />
     </div>

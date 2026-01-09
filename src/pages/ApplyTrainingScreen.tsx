@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
 import { Card, CardContent } from "../components/ui/Card";
+import { ConfirmModal } from "../components/ui/Modal";
+import { Alert } from "../components/ui/Alert";
 import {
   ArrowLeft,
   Upload,
@@ -11,11 +13,12 @@ import {
   User,
   Briefcase,
   AlertCircle,
-  Loader2,
+  Send,
 } from "lucide-react";
 import { useProgram } from "../contexts/ProgramContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile, type UserDocument } from "../contexts/ProfileContext";
+import Loader from "@/components/ui/Loader";
 
 interface FormData {
   motivation: string;
@@ -44,6 +47,10 @@ export default function ApplyTrainingScreen() {
     portfolio: null as File | null,
   });
   const [error, setError] = useState("");
+
+  // Modal & Alert states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   // Fetch profile documents on mount
   useEffect(() => {
@@ -147,8 +154,10 @@ export default function ApplyTrainingScreen() {
         },
       });
 
-      alert("Pengajuan pelatihan berhasil dikirim!");
-      navigate("/activity");
+      setShowSuccessAlert(true);
+      setTimeout(() => {
+        navigate("/activity");
+      }, 2000);
     } catch (err) {
       console.error("Error submitting application:", err);
       setError(err instanceof Error ? err.message : "Gagal mengirim pengajuan");
@@ -351,7 +360,7 @@ export default function ApplyTrainingScreen() {
 
               {loadingDocs ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="text-primary h-6 w-6 animate-spin" />
+                  <Loader />
                   <span className="text-muted-foreground ml-2 text-sm">
                     Memuat dokumen...
                   </span>
@@ -467,7 +476,7 @@ export default function ApplyTrainingScreen() {
 
           <div className="space-y-3">
             <Button
-              onClick={handleSubmit}
+              onClick={() => setShowConfirmModal(true)}
               disabled={loading}
               variant="gradient"
               size="lg"
@@ -491,6 +500,33 @@ export default function ApplyTrainingScreen() {
           </div>
         </div>
       </div>
+
+      {/* Confirm Submit Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={() => {
+          setShowConfirmModal(false);
+          handleSubmit();
+        }}
+        title="Kirim Pengajuan"
+        message="Pastikan semua data yang Anda masukkan sudah benar. Pengajuan yang sudah dikirim tidak dapat diubah."
+        confirmText="Ya, Kirim"
+        cancelText="Periksa Lagi"
+        variant="info"
+        icon={<Send size={24} />}
+        isLoading={loading}
+      />
+
+      {/* Success Alert */}
+      <Alert
+        isOpen={showSuccessAlert}
+        onClose={() => setShowSuccessAlert(false)}
+        type="success"
+        title="Pengajuan Berhasil Dikirim"
+        message="Pengajuan pelatihan Anda sedang diproses. Anda akan diarahkan ke halaman aktivitas."
+        duration={3000}
+      />
     </div>
   );
 }

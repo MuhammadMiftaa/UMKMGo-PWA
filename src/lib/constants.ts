@@ -29,9 +29,16 @@ export const API_ENDPOINTS = {
   // Applications
   APPLICATIONS: "/v1/mobile/applications",
   APPLICATION_DETAIL: "/v1/mobile/applications", // + /:id
+  APPLICATION_REVISE: "/v1/mobile/applications", // + /:id (PUT)
   APPLY_TRAINING: "/v1/mobile/applications/training",
   APPLY_CERTIFICATION: "/v1/mobile/applications/certification",
   APPLY_FUNDING: "/v1/mobile/applications/funding",
+
+  // Notifications
+  NOTIFICATIONS: "/v1/mobile/notifications/list",
+  NOTIFICATIONS_UNREAD_COUNT: "/v1/mobile/notifications/unread-count",
+  NOTIFICATION_MARK_AS_READ: "/v1/mobile/notifications/mark-as-read", // + /:id
+  NOTIFICATIONS_MARK_ALL_READ: "/v1/mobile/notifications/mark-all-read",
 
   // News
   NEWS: "/v1/mobile/news",

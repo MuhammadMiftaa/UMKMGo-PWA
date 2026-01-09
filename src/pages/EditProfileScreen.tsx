@@ -13,9 +13,12 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
+import { useProfile, type ProfileUpdateData } from "../contexts/ProfileContext";
+import { useAuth } from "../contexts/AuthContext";
 
-interface ProfileData {
+interface FormData {
   fullname: string;
   nik: string;
   gender: string;
@@ -26,19 +29,27 @@ interface ProfileData {
   kartuType: string;
   kartuNumber: string;
   address: string;
-  provinceId: string;
-  cityId: string;
+  provinceId: number;
+  cityId: number;
   district: string;
   postalCode: string;
+  photo: string;
 }
 
 export default function EditProfileScreen() {
   const navigate = useNavigate();
+  const {
+    profile,
+    isLoading: profileLoading,
+    updateProfile,
+    fetchProfile,
+  } = useProfile();
+  const { metaData, fetchMetaData, getCitiesByProvince } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const [formData, setFormData] = useState<ProfileData>({
+  const [formData, setFormData] = useState<FormData>({
     fullname: "",
     nik: "",
     gender: "",
@@ -49,50 +60,47 @@ export default function EditProfileScreen() {
     kartuType: "",
     kartuNumber: "",
     address: "",
-    provinceId: "",
-    cityId: "",
+    provinceId: 0,
+    cityId: 0,
     district: "",
     postalCode: "",
+    photo: "",
   });
 
-  const [provinces] = useState([
-    { id: "32", name: "JAWA BARAT" },
-    { id: "35", name: "JAWA TIMUR" },
-    { id: "31", name: "DKI JAKARTA" },
-  ]);
-
-  const [cities] = useState([
-    { id: "3273", name: "KOTA BANDUNG", province_id: "32" },
-    { id: "3578", name: "KOTA SURABAYA", province_id: "35" },
-    { id: "3172", name: "JAKARTA PUSAT", province_id: "31" },
-  ]);
-
+  // Fetch meta data and profile on mount
   useEffect(() => {
-    const stored = localStorage.getItem("userData");
-    if (stored) {
-      const data = JSON.parse(stored);
-      setFormData({
-        fullname: data.fullname || "Akbar Chalay",
-        nik: data.nik || "1234567890987654",
-        gender: data.gender === "Laki-laki" ? "male" : "female",
-        birthDate: data.birthDate || "2008-08-06",
-        email: data.email || "akbar@email.com",
-        phone: data.phone || "81234567890",
-        businessName: data.businessName || "PT Semua Teman",
-        kartuType: data.kartuType || "Kartu Afirmatif",
-        kartuNumber: data.kartuNumber || "1234567890",
-        address: data.address || "Jl. Ketintang No. 123",
-        provinceId: "35",
-        cityId: "3578",
-        district: data.district || "Ketintang",
-        postalCode: data.postalCode || "60210",
-      });
+    fetchMetaData();
+    if (!profile) {
+      fetchProfile();
     }
   }, []);
 
-  const filteredCities = cities.filter(
-    (city) => city.province_id === formData.provinceId,
-  );
+  // Populate form when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullname: profile.user?.name || "",
+        nik: profile.nik || "",
+        gender: profile.gender || "",
+        birthDate: profile.birth_date || "",
+        email: profile.user?.email || "",
+        phone: profile.phone || "",
+        businessName: profile.business_name || "",
+        kartuType: profile.kartu_type || "",
+        kartuNumber: profile.kartu_number || "",
+        address: profile.address || "",
+        provinceId: profile.province_id || 0,
+        cityId: profile.city_id || 0,
+        district: profile.district || "",
+        postalCode: profile.postal_code || "",
+        photo: profile.photo || "",
+      });
+    }
+  }, [profile]);
+
+  const filteredCities = formData.provinceId
+    ? getCitiesByProvince(formData.provinceId)
+    : [];
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -100,10 +108,31 @@ export default function EditProfileScreen() {
     >,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "provinceId") {
+      setFormData((prev) => ({
+        ...prev,
+        provinceId: parseInt(value) || 0,
+        cityId: 0, // Reset city when province changes
+      }));
+    } else if (name === "cityId") {
+      setFormData((prev) => ({ ...prev, cityId: parseInt(value) || 0 }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSubmit = () => {
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
     setError("");
     setSuccess(false);
@@ -111,12 +140,6 @@ export default function EditProfileScreen() {
     // Validation
     if (!formData.fullname.trim()) {
       setError("Nama lengkap harus diisi");
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.nik || formData.nik.length !== 16) {
-      setError("NIK harus 16 digit");
       setLoading(false);
       return;
     }
@@ -139,21 +162,49 @@ export default function EditProfileScreen() {
       return;
     }
 
-    setTimeout(() => {
-      const dataToSave = {
-        ...formData,
-        gender: formData.gender === "male" ? "Laki-laki" : "Perempuan",
-      };
-      localStorage.setItem("userData", JSON.stringify(dataToSave));
+    // Prepare update data
+    const updateData: ProfileUpdateData = {
+      name: formData.fullname,
+      business_name: formData.businessName,
+      gender: formData.gender as "male" | "female",
+      birth_date: formData.birthDate,
+      address: formData.address,
+      province_id: formData.provinceId,
+      city_id: formData.cityId,
+      district: formData.district,
+      postal_code: formData.postalCode,
+    };
 
+    // Only include photo if it was changed
+    if (formData.photo && formData.photo.startsWith("data:")) {
+      updateData.photo = formData.photo;
+    }
+
+    const result = await updateProfile(updateData);
+
+    if (result.success) {
       setSuccess(true);
-      setLoading(false);
-
       setTimeout(() => {
         navigate("/profile");
       }, 1500);
-    }, 1000);
+    } else {
+      setError(result.message || "Gagal memperbarui profil");
+    }
+
+    setLoading(false);
   };
+
+  // Loading state
+  if (profileLoading && !profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+          <p className="text-muted-foreground mt-4">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white pb-24">
@@ -177,12 +228,26 @@ export default function EditProfileScreen() {
           <CardContent className="p-6">
             <div className="flex flex-col items-center">
               <div className="relative">
-                <div className="from-primary via-accent to-secondary flex h-24 w-24 items-center justify-center rounded-2xl bg-linear-to-br text-4xl font-bold text-white">
-                  {formData.fullname.charAt(0)}
-                </div>
-                <button className="absolute -right-2 -bottom-2 flex h-10 w-10 items-center justify-center rounded-xl border-2 border-blue-100 bg-white shadow-lg transition-transform hover:scale-110">
+                {formData.photo ? (
+                  <img
+                    src={formData.photo}
+                    alt="Profile"
+                    className="h-24 w-24 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="from-primary via-accent to-secondary flex h-24 w-24 items-center justify-center rounded-2xl bg-linear-to-br text-4xl font-bold text-white">
+                    {formData.fullname.charAt(0) || "U"}
+                  </div>
+                )}
+                <label className="absolute -right-2 -bottom-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border-2 border-blue-100 bg-white shadow-lg transition-transform hover:scale-110">
                   <Camera size={18} className="text-primary" />
-                </button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                </label>
               </div>
               <p className="text-muted-foreground mt-3 text-sm">
                 Klik untuk ubah foto profil
@@ -393,7 +458,7 @@ export default function EditProfileScreen() {
                     className="border-border focus:border-primary focus:ring-primary/10 flex h-12 w-full rounded-xl border-2 bg-white px-4 py-3 text-base transition-all focus:ring-4 focus:outline-none"
                   >
                     <option value="">Pilih</option>
-                    {provinces.map((prov) => (
+                    {metaData?.provinces?.map((prov) => (
                       <option key={prov.id} value={prov.id}>
                         {prov.name}
                       </option>

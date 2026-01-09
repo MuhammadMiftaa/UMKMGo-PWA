@@ -7,17 +7,23 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProgramProvider } from "./contexts/ProgramContext";
 import { NewsProvider } from "./contexts/NewsContext";
 import { DashboardProvider } from "./contexts/DashboardContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { ProfileProvider } from "./contexts/ProfileContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <DashboardProvider>
-          <ProgramProvider>
-            <NewsProvider>
-              <App />
-            </NewsProvider>
-          </ProgramProvider>
+          <NotificationProvider>
+            <ProfileProvider>
+              <ProgramProvider>
+                <NewsProvider>
+                  <App />
+                </NewsProvider>
+              </ProgramProvider>
+            </ProfileProvider>
+          </NotificationProvider>
         </DashboardProvider>
       </AuthProvider>
     </BrowserRouter>

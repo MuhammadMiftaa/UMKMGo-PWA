@@ -1,5 +1,5 @@
 // src/pages/NotificationsScreen.tsx
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
@@ -11,91 +11,27 @@ import {
   CheckCheck,
   Send,
   FileCheck,
+  Loader2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
-
-interface Notification {
-  id: number;
-  type: string;
-  title: string;
-  message: string;
-  created_at: string;
-  is_read: boolean;
-  application_id?: number; // Add application_id field
-}
+import { useNotification } from "../contexts/NotificationContext";
 
 export default function NotificationsScreen() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: "final_approved",
-      title: "Pengajuan Disetujui Final",
-      message:
-        "Selamat! Pengajuan Anda untuk Pelatihan Digital Marketing telah disetujui secara final",
-      created_at: "2025-11-24 09:30:00",
-      is_read: false,
-      application_id: 1,
-    },
-    {
-      id: 2,
-      type: "screening_revised",
-      title: "Perlu Revisi Dokumen",
-      message:
-        "Dokumen pengajuan Anda perlu direvisi. Silakan periksa komentar pada detail aplikasi.",
-      created_at: "2025-11-23 15:00:00",
-      is_read: false,
-      application_id: 2,
-    },
-    {
-      id: 3,
-      type: "screening_approved",
-      title: "Lolos Tahap Screening",
-      message:
-        "Pengajuan Anda telah lolos tahap screening dan akan diproses lebih lanjut",
-      created_at: "2025-11-22 11:20:00",
-      is_read: false,
-      application_id: 3,
-    },
-    {
-      id: 4,
-      type: "final_rejected",
-      title: "Pengajuan Ditolak",
-      message:
-        "Pengajuan Anda untuk Sertifikasi ISO 9001 tidak dapat disetujui pada tahap final",
-      created_at: "2025-11-21 14:00:00",
-      is_read: true,
-      application_id: 4,
-    },
-    {
-      id: 5,
-      type: "screening_rejected",
-      title: "Ditolak pada Tahap Screening",
-      message:
-        "Pengajuan Anda tidak lolos tahap screening. Data tidak lengkap, silakan periksa kembali.",
-      created_at: "2025-11-21 07:13:16",
-      is_read: true,
-      application_id: 5,
-    },
-    {
-      id: 6,
-      type: "application_submitted",
-      title: "Pengajuan Berhasil Dikirim",
-      message:
-        "Pengajuan Anda telah diterima dan akan segera diproses oleh tim kami",
-      created_at: "2025-11-20 10:45:00",
-      is_read: true,
-      application_id: 6,
-    },
-  ]);
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotification();
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
-
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notif) => ({ ...notif, is_read: true })),
-    );
-  };
+  // Fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const getNotificationIcon = (type: string) => {
     const icons: {
@@ -117,6 +53,11 @@ export default function NotificationsScreen() {
         bg: "bg-red-100",
       },
       screening_revised: {
+        icon: <AlertCircle size={24} />,
+        color: "text-amber-600",
+        bg: "bg-amber-100",
+      },
+      revision: {
         icon: <AlertCircle size={24} />,
         color: "text-amber-600",
         bg: "bg-amber-100",
@@ -158,11 +99,15 @@ export default function NotificationsScreen() {
     });
   };
 
-  const handleNotificationClick = (notif: Notification) => {
-    // Mark notification as read
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n)),
-    );
+  const handleNotificationClick = async (notif: {
+    id: number;
+    is_read: boolean;
+    application_id?: number;
+  }) => {
+    // Mark notification as read if not already
+    if (!notif.is_read) {
+      await markAsRead(notif.id);
+    }
 
     // Navigate to detail activity if application_id exists
     if (notif.application_id) {
@@ -171,6 +116,10 @@ export default function NotificationsScreen() {
       // Fallback to activity page if no application_id
       navigate("/activity");
     }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
   };
 
   return (
@@ -197,7 +146,7 @@ export default function NotificationsScreen() {
       {unreadCount > 0 && (
         <div className="border-b border-blue-100 bg-white px-6 py-4">
           <Button
-            onClick={markAllAsRead}
+            onClick={handleMarkAllAsRead}
             variant="outline"
             size="sm"
             className="text-primary border-blue-200 hover:bg-blue-50"
@@ -208,77 +157,103 @@ export default function NotificationsScreen() {
         </div>
       )}
 
-      {/* Notifications List */}
-      <div className="px-6 py-6">
-        {notifications.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
-              <Bell className="text-primary h-8 w-8" />
-            </div>
-            <p className="text-muted-foreground">Tidak ada notifikasi</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Notifikasi akan muncul di sini
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {notifications.map((notif) => {
-              const notifIcon = getNotificationIcon(notif.type);
-              return (
-                <button
-                  key={notif.id}
-                  onClick={() => handleNotificationClick(notif)}
-                  className="w-full text-left"
-                >
-                  <Card
-                    className={`transition-all hover:scale-[1.02] hover:shadow-lg ${
-                      notif.is_read
-                        ? "border-blue-100"
-                        : "border-primary/30 border-2 bg-linear-to-br from-blue-50/50 to-white"
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex gap-4">
-                        <div
-                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${notifIcon.bg}`}
-                        >
-                          <span className={notifIcon.color}>
-                            {notifIcon.icon}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3
-                              className={`font-semibold ${
-                                notif.is_read
-                                  ? "text-foreground"
-                                  : "text-primary"
-                              }`}
-                            >
-                              {notif.title}
-                            </h3>
-                            {!notif.is_read && (
-                              <div className="bg-primary mt-1 h-2 w-2 shrink-0 rounded-full" />
-                            )}
-                          </div>
-                          <p className="text-muted-foreground mt-1 text-sm">
-                            {notif.message}
-                          </p>
-                          <p className="text-muted-foreground mt-2 text-xs">
-                            {formatTime(notif.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* Error State */}
+      {error && (
+        <div className="px-6 py-4">
+          <Card className="border-2 border-red-200 bg-red-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      <BottomNavigation />
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <Loader2 className="text-primary mx-auto h-10 w-10 animate-spin" />
+            <p className="text-muted-foreground mt-4">Memuat notifikasi...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications List */}
+      {!isLoading && (
+        <div className="px-6 py-6">
+          {notifications.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
+                <Bell className="text-primary h-8 w-8" />
+              </div>
+              <p className="text-muted-foreground">Tidak ada notifikasi</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Notifikasi akan muncul di sini
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notif) => {
+                const notifIcon = getNotificationIcon(notif.type);
+                return (
+                  <button
+                    key={notif.id}
+                    onClick={() => handleNotificationClick(notif)}
+                    className="w-full text-left"
+                  >
+                    <Card
+                      className={`transition-all hover:scale-[1.02] hover:shadow-lg ${
+                        notif.is_read
+                          ? "border-blue-100"
+                          : "border-primary/30 border-2 bg-linear-to-br from-blue-50/50 to-white"
+                      }`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex gap-4">
+                          <div
+                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${notifIcon.bg}`}
+                          >
+                            <span className={notifIcon.color}>
+                              {notifIcon.icon}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3
+                                className={`font-semibold ${
+                                  notif.is_read
+                                    ? "text-foreground"
+                                    : "text-primary"
+                                }`}
+                              >
+                                {notif.title}
+                              </h3>
+                              {!notif.is_read && (
+                                <div className="bg-primary mt-1 h-2 w-2 shrink-0 rounded-full" />
+                              )}
+                            </div>
+                            <p className="text-muted-foreground mt-1 text-sm">
+                              {notif.message}
+                            </p>
+                            <p className="text-muted-foreground mt-2 text-xs">
+                              {formatTime(notif.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      <BottomNavigation notificationCount={unreadCount} />
     </div>
   );
 }

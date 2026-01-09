@@ -143,6 +143,11 @@ export interface FundingApplicationInput extends FundingApplicationData {
   };
 }
 
+export interface ReviseDocumentInput {
+  type: string; // ktp / portfolio / nib / npwp / rekening / proposal / financial_records
+  document: string; // base64 (new file) / url (existing file)
+}
+
 // ===== CONTEXT =====
 interface ProgramContextType {
   // State
@@ -160,6 +165,10 @@ interface ProgramContextType {
   applyTraining: (data: TrainingApplicationInput) => Promise<void>;
   applyCertification: (data: CertificationApplicationInput) => Promise<void>;
   applyFunding: (data: FundingApplicationInput) => Promise<void>;
+  reviseApplication: (
+    id: number,
+    documents: ReviseDocumentInput[],
+  ) => Promise<void>;
 }
 
 const ProgramContext = createContext<ProgramContextType | undefined>(undefined);
@@ -383,6 +392,36 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Revise application documents
+  const reviseApplication = async (
+    id: number,
+    documents: ReviseDocumentInput[],
+  ) => {
+    try {
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      await apiCall(`${API_ENDPOINTS.APPLICATION_REVISE}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(documents),
+      });
+
+      // Refresh applications list
+      await fetchApplications();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new Error("Failed to revise application");
+    }
+  };
+
   // Auto-fetch applications on mount if user is logged in
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -402,6 +441,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     applyTraining,
     applyCertification,
     applyFunding,
+    reviseApplication,
   };
 
   return (

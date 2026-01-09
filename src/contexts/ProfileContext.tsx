@@ -59,6 +59,12 @@ export interface ProfileUpdateData {
   photo?: string; // base64
 }
 
+export type DocumentType =
+  | "nib"
+  | "npwp"
+  | "revenue_record"
+  | "business_permit";
+
 interface ProfileContextType {
   // State
   profile: UserProfile | null;
@@ -69,6 +75,10 @@ interface ProfileContextType {
   fetchProfile: () => Promise<void>;
   updateProfile: (
     data: ProfileUpdateData,
+  ) => Promise<{ success: boolean; message?: string }>;
+  uploadDocument: (
+    type: DocumentType,
+    document: string,
   ) => Promise<{ success: boolean; message?: string }>;
   clearError: () => void;
   clearProfile: () => void;
@@ -161,12 +171,56 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setError(null);
   };
 
+  // Upload document (NIB, NPWP, etc.)
+  const uploadDocument = async (
+    type: DocumentType,
+    document: string,
+  ): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await apiCall(API_ENDPOINTS.DOCUMENT_UPLOAD, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ type, document }),
+      });
+
+      // Refresh profile after upload
+      await fetchProfile();
+
+      return {
+        success: true,
+        message: response.message || "Dokumen berhasil diupload",
+      };
+    } catch (err) {
+      const errorMessage =
+        err instanceof ApiError ? err.message : "Gagal mengupload dokumen";
+      setError(errorMessage);
+      console.error("Error uploading document:", err);
+      return {
+        success: false,
+        message: errorMessage,
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value: ProfileContextType = {
     profile,
     isLoading,
     error,
     fetchProfile,
     updateProfile,
+    uploadDocument,
     clearError,
     clearProfile,
   };

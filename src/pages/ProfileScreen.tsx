@@ -1,5 +1,5 @@
 // src/pages/ProfileScreen.tsx
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
@@ -15,24 +15,116 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  Check,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
-import { useProfile } from "../contexts/ProfileContext";
+import { useProfile, type DocumentType } from "../contexts/ProfileContext";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
-  const { profile, isLoading, error, fetchProfile } = useProfile();
+  const { profile, isLoading, error, fetchProfile, uploadDocument } =
+    useProfile();
   const { logout } = useAuth();
+
+  // Refs for file inputs
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  // States for upload
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Fetch profile on mount
   useEffect(() => {
     fetchProfile();
   }, []);
 
+  // Clear success message after delay
+  useEffect(() => {
+    if (uploadSuccess) {
+      const timer = setTimeout(() => setUploadSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [uploadSuccess]);
+
+  // Clear error message after delay
+  useEffect(() => {
+    if (uploadError) {
+      const timer = setTimeout(() => setUploadError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [uploadError]);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Handle file selection for document upload
+  const handleFileSelect = async (docType: DocumentType, file: File) => {
+    setUploadingDoc(docType);
+    setUploadError(null);
+
+    try {
+      // Validate file type
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "application/pdf",
+      ];
+      if (!validTypes.includes(file.type)) {
+        throw new Error(
+          "Format file tidak didukung. Gunakan JPG, PNG, atau PDF.",
+        );
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        throw new Error("Ukuran file maksimal 5MB.");
+      }
+
+      // Convert to base64
+      const base64 = await fileToBase64(file);
+
+      // Upload
+      const result = await uploadDocument(docType, base64);
+
+      if (result.success) {
+        setUploadSuccess(docType);
+      } else {
+        setUploadError(result.message || "Gagal mengupload dokumen");
+      }
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : "Gagal mengupload dokumen",
+      );
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  // Trigger file input click
+  const triggerFileInput = (docType: string) => {
+    const input = fileInputRefs.current[docType];
+    if (input) {
+      input.click();
+    }
   };
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
@@ -238,39 +330,104 @@ export default function ProfileScreen() {
                 Dokumen Tambahan
               </h3>
             </div>
+
+            {/* Upload Success Message */}
+            {uploadSuccess && (
+              <div className="mb-3 flex items-center gap-2 rounded-lg bg-green-100 p-3">
+                <Check className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-green-600">
+                  Dokumen berhasil diupload
+                </span>
+              </div>
+            )}
+
+            {/* Upload Error Message */}
+            {uploadError && (
+              <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-100 p-3">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <span className="text-sm text-red-600">{uploadError}</span>
+              </div>
+            )}
+
             <div className="space-y-2">
-              {[
-                { key: "nib", label: "NIB", value: profile?.nib },
-                { key: "npwp", label: "NPWP", value: profile?.npwp },
-                {
-                  key: "revenue_record",
-                  label: "Catatan Pendapatan",
-                  value: profile?.revenue_record,
-                },
-                {
-                  key: "business_permit",
-                  label: "Surat Izin Usaha",
-                  value: profile?.business_permit,
-                },
-              ].map((doc, idx) => (
-                <button
-                  key={idx}
-                  className="hover:border-primary flex w-full items-center justify-between rounded-xl border-2 border-blue-100 bg-blue-50/30 p-3 transition-all hover:bg-blue-50"
-                >
-                  <div className="flex flex-col items-start">
-                    <span className="text-foreground text-sm font-semibold">
-                      {doc.label}
-                    </span>
-                    {doc.value && (
-                      <span className="text-muted-foreground text-xs">
-                        Sudah diupload
+              {(
+                [
+                  {
+                    key: "nib" as DocumentType,
+                    label: "NIB",
+                    value: profile?.nib,
+                  },
+                  {
+                    key: "npwp" as DocumentType,
+                    label: "NPWP",
+                    value: profile?.npwp,
+                  },
+                  {
+                    key: "revenue_record" as DocumentType,
+                    label: "Catatan Pendapatan",
+                    value: profile?.revenue_record,
+                  },
+                  {
+                    key: "business_permit" as DocumentType,
+                    label: "Surat Izin Usaha",
+                    value: profile?.business_permit,
+                  },
+                ] as const
+              ).map((doc, idx) => (
+                <div key={idx}>
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={(el) => {
+                      fileInputRefs.current[doc.key] = el;
+                    }}
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/jpg,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileSelect(doc.key, file);
+                        e.target.value = ""; // Reset input
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => triggerFileInput(doc.key)}
+                    disabled={uploadingDoc === doc.key}
+                    className="hover:border-primary flex w-full items-center justify-between rounded-xl border-2 border-blue-100 bg-blue-50/30 p-3 transition-all hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="text-foreground text-sm font-semibold">
+                        {doc.label}
                       </span>
+                      {doc.value && (
+                        <span className="text-xs text-green-600">
+                          ✓ Sudah diupload
+                        </span>
+                      )}
+                      {!doc.value && (
+                        <span className="text-muted-foreground text-xs">
+                          Belum diupload
+                        </span>
+                      )}
+                    </div>
+                    {uploadingDoc === doc.key ? (
+                      <Loader2
+                        size={18}
+                        className="text-primary animate-spin"
+                      />
+                    ) : uploadSuccess === doc.key ? (
+                      <Check size={18} className="text-green-600" />
+                    ) : (
+                      <Upload size={18} className="text-primary" />
                     )}
-                  </div>
-                  <Upload size={18} className="text-primary" />
-                </button>
+                  </button>
+                </div>
               ))}
             </div>
+            <p className="text-muted-foreground mt-3 text-xs">
+              Format yang didukung: JPG, PNG, PDF (maks. 5MB)
+            </p>
           </CardContent>
         </Card>
 

@@ -43,7 +43,10 @@ export const API_ENDPOINTS = {
   // News
   NEWS: "/v1/mobile/news",
   NEWS_DETAIL: "/v1/mobile/news", // + /:slug
-} as const;
+
+  // Documents
+  DOCUMENT_UPLOAD: "/v1/mobile/documents/upload",
+} as const;  
 
 // Storage Keys
 export const STORAGE_KEYS = {

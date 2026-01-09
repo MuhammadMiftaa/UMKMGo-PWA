@@ -221,7 +221,7 @@ export default function DashboardScreen() {
                   <Award className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Disetujui</p>
+                  <p className="text-muted-foreground text-xs">Pengajuan Lolos</p>
                   <p className="text-foreground text-xl font-bold">
                     {isDashboardLoading
                       ? "-"

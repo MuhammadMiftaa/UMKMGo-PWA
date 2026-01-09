@@ -127,7 +127,7 @@ const dashboardRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/dashboard")
+      request.url.includes(API_BASE_URL + "/mobile/dashboard")
     );
   },
   new NetworkFirst({
@@ -151,7 +151,7 @@ const profileRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/profile")
+      request.url.includes(API_BASE_URL + "/mobile/profile")
     );
   },
   new NetworkFirst({
@@ -175,7 +175,7 @@ const programsRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/programs")
+      request.url.includes(API_BASE_URL + "/mobile/programs")
     );
   },
   new NetworkFirst({
@@ -199,7 +199,7 @@ const applicationsRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/applications")
+      request.url.includes(API_BASE_URL + "/mobile/applications")
     );
   },
   new NetworkFirst({
@@ -223,7 +223,7 @@ const notificationsRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/notifications")
+      request.url.includes(API_BASE_URL + "/mobile/notifications")
     );
   },
   new NetworkFirst({
@@ -247,7 +247,7 @@ const newsRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/news")
+      request.url.includes(API_BASE_URL + "/mobile/news")
     );
   },
   new NetworkFirst({
@@ -271,7 +271,7 @@ const documentsRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobile/documents")
+      request.url.includes(API_BASE_URL + "/mobile/documents")
     );
   },
   new NetworkFirst({
@@ -295,7 +295,7 @@ const metaRoute = new Route(
   ({ request }) => {
     return (
       request.method === "GET" &&
-      request.url.includes(API_BASE_URL + "/v1/mobileauth/meta")
+      request.url.includes(API_BASE_URL + "/mobileauth/meta")
     );
   },
   new CacheFirst({
@@ -357,7 +357,7 @@ const bgSyncPlugin = new BackgroundSyncPlugin("offlineSubmitQueue", {
 const trainingSubmitRoute = new Route(
   ({ request }) => {
     return request.url.includes(
-      API_BASE_URL + "/v1/mobile/applications/training",
+      API_BASE_URL + "/mobile/applications/training",
     );
   },
   new NetworkOnly({
@@ -371,7 +371,7 @@ registerRoute(trainingSubmitRoute);
 const certificationSubmitRoute = new Route(
   ({ request }) => {
     return request.url.includes(
-      API_BASE_URL + "/v1/mobile/applications/certification",
+      API_BASE_URL + "/mobile/applications/certification",
     );
   },
   new NetworkOnly({
@@ -385,7 +385,7 @@ registerRoute(certificationSubmitRoute);
 const fundingSubmitRoute = new Route(
   ({ request }) => {
     return request.url.includes(
-      API_BASE_URL + "/v1/mobile/applications/funding",
+      API_BASE_URL + "/mobile/applications/funding",
     );
   },
   new NetworkOnly({
@@ -398,7 +398,7 @@ registerRoute(fundingSubmitRoute);
 // Background sync for profile updates
 const profileUpdateRoute = new Route(
   ({ request }) => {
-    return request.url.includes(API_BASE_URL + "/v1/mobile/profile");
+    return request.url.includes(API_BASE_URL + "/mobile/profile");
   },
   new NetworkOnly({
     plugins: [bgSyncPlugin],
@@ -410,7 +410,7 @@ registerRoute(profileUpdateRoute);
 // Background sync for document uploads
 const documentUploadRoute = new Route(
   ({ request }) => {
-    return request.url.includes(API_BASE_URL + "/v1/mobile/documents/upload");
+    return request.url.includes(API_BASE_URL + "/mobile/documents/upload");
   },
   new NetworkOnly({
     plugins: [bgSyncPlugin],
@@ -423,7 +423,7 @@ registerRoute(documentUploadRoute);
 const revisionRoute = new Route(
   ({ request }) => {
     return (
-      request.url.includes(API_BASE_URL + "/v1/mobile/applications") &&
+      request.url.includes(API_BASE_URL + "/mobile/applications") &&
       request.method === "PUT"
     );
   },
@@ -437,7 +437,7 @@ registerRoute(revisionRoute);
 // Background sync for marking notifications as read
 const markNotificationRoute = new Route(
   ({ request }) => {
-    return request.url.includes(API_BASE_URL + "/v1/mobile/notifications/mark");
+    return request.url.includes(API_BASE_URL + "/mobile/notifications/mark");
   },
   new NetworkOnly({
     plugins: [bgSyncPlugin],

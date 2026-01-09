@@ -1,47 +1,47 @@
 // API Endpoints
 export const API_ENDPOINTS = {
   // Auth
-  META: "/v1/mobileauth/meta",
-  REGISTER: "/v1/mobileauth/register",
-  VERIFY_OTP: "/v1/mobileauth/verify/otp",
-  PROFILE_REGISTER: "/v1/mobileauth/register/profile",
-  LOGIN: "/v1/mobileauth/login",
-  FORGOT_PASSWORD: "/v1/mobileauth/forgot-password",
-  RESET_PASSWORD: "/v1/mobileauth/reset-password",
+  META: "/mobileauth/meta",
+  REGISTER: "/mobileauth/register",
+  VERIFY_OTP: "/mobileauth/verify/otp",
+  PROFILE_REGISTER: "/mobileauth/register/profile",
+  LOGIN: "/mobileauth/login",
+  FORGOT_PASSWORD: "/mobileauth/forgot-password",
+  RESET_PASSWORD: "/mobileauth/reset-password",
 
   // Profile
-  PROFILE: "/v1/mobile/profile",
+  PROFILE: "/mobile/profile",
 
   // Dashboard
-  DASHBOARD: "/v1/mobile/dashboard",
+  DASHBOARD: "/mobile/dashboard",
 
   // Programs
-  PROGRAMS_TRAINING: "/v1/mobile/programs/training",
-  PROGRAMS_CERTIFICATION: "/v1/mobile/programs/certification",
-  PROGRAMS_FUNDING: "/v1/mobile/programs/funding",
-  PROGRAM_DETAIL: "/v1/mobile/programs", // + /:id
+  PROGRAMS_TRAINING: "/mobile/programs/training",
+  PROGRAMS_CERTIFICATION: "/mobile/programs/certification",
+  PROGRAMS_FUNDING: "/mobile/programs/funding",
+  PROGRAM_DETAIL: "/mobile/programs", // + /:id
 
   // Applications
-  APPLICATIONS: "/v1/mobile/applications",
-  APPLICATION_DETAIL: "/v1/mobile/applications", // + /:id
-  APPLICATION_REVISE: "/v1/mobile/applications", // + /:id (PUT)
-  APPLY_TRAINING: "/v1/mobile/applications/training",
-  APPLY_CERTIFICATION: "/v1/mobile/applications/certification",
-  APPLY_FUNDING: "/v1/mobile/applications/funding",
+  APPLICATIONS: "/mobile/applications",
+  APPLICATION_DETAIL: "/mobile/applications", // + /:id
+  APPLICATION_REVISE: "/mobile/applications", // + /:id (PUT)
+  APPLY_TRAINING: "/mobile/applications/training",
+  APPLY_CERTIFICATION: "/mobile/applications/certification",
+  APPLY_FUNDING: "/mobile/applications/funding",
 
   // Notifications
-  NOTIFICATIONS: "/v1/mobile/notifications/list",
-  NOTIFICATIONS_UNREAD_COUNT: "/v1/mobile/notifications/unread-count",
-  NOTIFICATION_MARK_AS_READ: "/v1/mobile/notifications/mark-as-read", // + /:id
-  NOTIFICATIONS_MARK_ALL_READ: "/v1/mobile/notifications/mark-all-as-read",
+  NOTIFICATIONS: "/mobile/notifications/list",
+  NOTIFICATIONS_UNREAD_COUNT: "/mobile/notifications/unread-count",
+  NOTIFICATION_MARK_AS_READ: "/mobile/notifications/mark-as-read", // + /:id
+  NOTIFICATIONS_MARK_ALL_READ: "/mobile/notifications/mark-all-as-read",
 
   // News
-  NEWS: "/v1/mobile/news",
-  NEWS_DETAIL: "/v1/mobile/news", // + /:slug
+  NEWS: "/mobile/news",
+  NEWS_DETAIL: "/mobile/news", // + /:slug
 
   // Documents
-  DOCUMENTS: "/v1/mobile/documents",
-  DOCUMENT_UPLOAD: "/v1/mobile/documents/upload",
+  DOCUMENTS: "/mobile/documents",
+  DOCUMENT_UPLOAD: "/mobile/documents/upload",
 } as const;
 
 // Storage Keys

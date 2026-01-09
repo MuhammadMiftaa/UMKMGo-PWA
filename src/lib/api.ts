@@ -1,5 +1,5 @@
 // src/lib/api.ts
-import { API_BASE_URL } from "./constants";
+import { API_BASE_URL } from "./env";
 
 export interface ApiResponse<T = unknown> {
   status: boolean;
@@ -32,7 +32,7 @@ export async function apiCall<T>(
   const defaultHeaders: HeadersInit = {
     "Content-Type": "application/json",
   };
-  console.log("API URL => ", url);
+
   const response = await fetch(url, {
     ...options,
     headers: {

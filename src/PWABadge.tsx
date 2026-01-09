@@ -65,7 +65,7 @@ function PWABadge() {
     <>
       {/* Offline Banner - Fixed at top */}
       {showOfflineBanner && !isOnline && (
-        <div className="animate-slide-down fixed top-0 right-0 left-0 z-[9999] flex items-center justify-between bg-amber-500 px-4 py-2 text-white shadow-lg">
+        <div className="animate-slide-down fixed top-0 right-0 left-0 z-9999 flex items-center justify-between bg-amber-500 px-4 py-2 text-white shadow-lg">
           <div className="flex items-center gap-2">
             <WifiOff size={18} />
             <span className="text-sm font-medium">
@@ -83,7 +83,7 @@ function PWABadge() {
 
       {/* Online Restored Banner */}
       {isOnline && showOfflineBanner && (
-        <div className="animate-slide-down fixed top-0 right-0 left-0 z-[9999] flex items-center justify-between bg-green-500 px-4 py-2 text-white shadow-lg">
+        <div className="animate-slide-down fixed top-0 right-0 left-0 z-9999 flex items-center justify-between bg-green-500 px-4 py-2 text-white shadow-lg">
           <div className="flex items-center gap-2">
             <Wifi size={18} />
             <span className="text-sm font-medium">
@@ -102,7 +102,7 @@ function PWABadge() {
       {/* PWA Update/Offline Ready Toast */}
       <div className="PWABadge" role="alert" aria-labelledby="toast-message">
         {(offlineReady || needRefresh) && (
-          <div className="animate-slide-up fixed right-4 bottom-20 left-4 z-[9999] rounded-xl border border-gray-100 bg-white p-4 shadow-2xl">
+          <div className="animate-slide-up fixed right-4 bottom-20 left-4 z-9999 rounded-xl border border-gray-100 bg-white p-4 shadow-2xl">
             <div className="flex items-start gap-3">
               <div
                 className={`rounded-full p-2 ${

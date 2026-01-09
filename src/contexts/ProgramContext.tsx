@@ -268,7 +268,6 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
         setApplications(response.data);
       }
     } catch (error) {
-      console.log("Error Fetch Applications => ", error);
       if (error instanceof ApiError) {
         throw error;
       }

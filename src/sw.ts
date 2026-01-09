@@ -9,15 +9,11 @@ import {
   StaleWhileRevalidate,
 } from "workbox-strategies";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
+import { API_BASE_URL } from "./lib/env";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const self: ServiceWorkerGlobalScope &
   typeof globalThis & { skipWaiting: () => Promise<void>; clients: any };
-
-// API Base URL
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://api-umkmgo-staging.miftech.web.id";
 
 // Clean up old caches
 cleanupOutdatedCaches();

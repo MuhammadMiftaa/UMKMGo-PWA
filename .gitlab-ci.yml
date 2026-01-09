@@ -19,7 +19,7 @@ build_pwa:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - echo "Building mobile application..."
-    - docker build --build-arg VITE_API_URL=https://api-umkmgo-staging.miftech.web.id/v1 -t "$CI_REGISTRY_IMAGE/pwa:latest" -t "$CI_REGISTRY_IMAGE/pwa:$TAG_IMAGE" .
+    - docker build -t "$CI_REGISTRY_IMAGE/pwa:latest" -t "$CI_REGISTRY_IMAGE/pwa:$TAG_IMAGE" .
     - docker push "$CI_REGISTRY_IMAGE/pwa" --all-tags
     - echo "$CI_JOB_ID" > pwa_build_job_id.txt
   artifacts:

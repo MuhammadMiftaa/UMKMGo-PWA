@@ -12,117 +12,59 @@ import {
   Filter,
   Search,
   Building2,
+  Loader2,
 } from "lucide-react";
 import { Input } from "../components/ui/Input";
 import BottomNavigation from "../components/BottomNavigation";
-
-interface Program {
-  id: number;
-  title: string;
-  description: string;
-  provider: string;
-  provider_logo?: string;
-  type: string;
-  batch?: number;
-  batch_start_date?: string;
-  batch_end_date?: string;
-  location?: string;
-  min_amount?: number;
-  max_amount?: number;
-  application_deadline?: string;
-  is_active: boolean;
-}
+import { useProgram } from "../contexts/ProgramContext";
+import type { Program } from "../contexts/ProgramContext";
 
 export default function ProgramListScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const programType = searchParams.get("type") || "training";
+  const programType = (searchParams.get("type") || "training") as
+    | "training"
+    | "certification"
+    | "funding";
 
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const { programs, fetchPrograms, isLoading } = useProgram();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterLocation, setFilterLocation] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([]);
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    const mockPrograms: Program[] = [
-      {
-        id: 1,
-        title: "Pelatihan Digital Marketing untuk UMKM",
-        description:
-          "Pelajari strategi pemasaran digital modern untuk meningkatkan penjualan online Anda",
-        provider: "Kementerian UMKM",
-        type: "training",
-        batch: 5,
-        batch_start_date: "2025-12-01",
-        batch_end_date: "2025-12-15",
-        location: "Jakarta",
-        application_deadline: "2025-11-25",
-        is_active: true,
-      },
-      {
-        id: 2,
-        title: "Pelatihan Manajemen Keuangan Bisnis",
-        description: "Kelola keuangan usaha dengan lebih baik dan profesional",
-        provider: "Bank Indonesia",
-        type: "training",
-        batch: 3,
-        batch_start_date: "2025-12-05",
-        batch_end_date: "2025-12-20",
-        location: "Surabaya",
-        application_deadline: "2025-11-28",
-        is_active: true,
-      },
-      {
-        id: 3,
-        title: "Sertifikasi Halal untuk Produk UMKM",
-        description:
-          "Dapatkan sertifikasi halal resmi untuk produk makanan dan minuman Anda",
-        provider: "BPJPH - Kemenag",
-        type: "certification",
-        application_deadline: "2025-12-10",
-        is_active: true,
-      },
-      {
-        id: 4,
-        title: "Sertifikasi ISO 9001:2015",
-        description:
-          "Standar manajemen mutu internasional untuk meningkatkan kredibilitas usaha",
-        provider: "BSN Indonesia",
-        type: "certification",
-        application_deadline: "2025-12-15",
-        is_active: true,
-      },
-      {
-        id: 5,
-        title: "Pendanaan Modal Usaha Produktif",
-        description:
-          "Dapatkan modal usaha dengan bunga rendah dan tenor fleksibel",
-        provider: "KUR - Bank Mandiri",
-        type: "funding",
-        min_amount: 5000000,
-        max_amount: 50000000,
-        application_deadline: "2025-12-31",
-        is_active: true,
-      },
-      {
-        id: 6,
-        title: "Pendanaan UMKM Go Digital",
-        description: "Pembiayaan khusus untuk transformasi digital UMKM",
-        provider: "BRI",
-        type: "funding",
-        min_amount: 10000000,
-        max_amount: 100000000,
-        application_deadline: "2025-12-20",
-        is_active: true,
-      },
-    ];
-
-    setTimeout(() => {
-      setPrograms(mockPrograms.filter((p) => p.type === programType));
-      setLoading(false);
-    }, 500);
+    loadPrograms();
   }, [programType]);
+
+  const loadPrograms = async () => {
+    try {
+      await fetchPrograms(programType);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    }
+  };
+
+  useEffect(() => {
+    filterPrograms();
+  }, [searchQuery, filterLocation, programs]);
+
+  const filterPrograms = () => {
+    let filtered = programs;
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (p) =>
+          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    }
+
+    if (filterLocation !== "all" && programType === "training") {
+      filtered = filtered.filter((p) => p.location === filterLocation);
+    }
+
+    setFilteredPrograms(filtered);
+  };
 
   const getTypeConfig = () => {
     const configs = {
@@ -154,15 +96,6 @@ export default function ProgramListScreen() {
   const typeConfig = getTypeConfig();
   const TypeIcon = typeConfig.icon;
 
-  const filteredPrograms = programs.filter((program) => {
-    const matchesSearch =
-      program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      program.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation =
-      filterLocation === "all" || program.location === filterLocation;
-    return matchesSearch && matchesLocation;
-  });
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -180,11 +113,11 @@ export default function ProgramListScreen() {
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
+          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
           <p className="text-muted-foreground mt-4">Memuat program...</p>
         </div>
       </div>

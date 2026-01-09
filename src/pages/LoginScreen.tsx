@@ -5,9 +5,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { ArrowLeft, Eye, EyeOff, LogIn } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function LoginScreen() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,15 +28,16 @@ export default function LoginScreen() {
         return;
       }
 
-      const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
-      localStorage.setItem("authToken", mockToken);
-      localStorage.setItem("userPhone", phone);
+      const result = await login({ phone, password });
 
-      setTimeout(() => {
+      if (result.success) {
         navigate("/dashboard");
-      }, 500);
+      } else {
+        setError(result.message || "Gagal login. Periksa kembali data Anda.");
+      }
     } catch (err) {
       setError("Gagal login. Periksa kembali data Anda.");
+    } finally {
       setLoading(false);
     }
   };

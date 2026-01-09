@@ -1,18 +1,31 @@
 // src/pages/ResetPasswordScreen.tsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { ArrowLeft, Eye, EyeOff, Lock, CheckCircle2 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function ResetPasswordScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { resetPassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const state = (location.state as { tempToken: string }) || {
+    tempToken: "",
+  };
+
+  useEffect(() => {
+    if (!state.tempToken) {
+      navigate("/forgot-password");
+    }
+  }, [state.tempToken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +51,22 @@ export default function ResetPasswordScreen() {
         return;
       }
 
-      setTimeout(() => {
+      const result = await resetPassword(
+        {
+          password,
+          confirm_password: confirmPassword,
+        },
+        state.tempToken,
+      );
+
+      if (result.success) {
         navigate("/login");
-      }, 500);
+      } else {
+        setError(result.message || "Gagal mereset password. Coba lagi.");
+      }
     } catch (err) {
       setError("Gagal mereset password. Coba lagi.");
+    } finally {
       setLoading(false);
     }
   };

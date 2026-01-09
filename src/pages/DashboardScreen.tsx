@@ -14,128 +14,39 @@ import {
   Sparkles,
   Eye,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
-
-interface UserData {
-  fullname: string;
-  businessName: string;
-  kartuNumber: string;
-}
-
-interface News {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  thumbnail: string;
-  category: string;
-  author_name: string;
-  views_count: number;
-  created_at: string;
-}
+import { useAuth } from "../contexts/AuthContext";
+import { useNews } from "../contexts/NewsContext";
+import type { News } from "../contexts/NewsContext";
 
 export default function DashboardScreen() {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [recentNews, setRecentNews] = useState<News[]>([]);
+  const { user } = useAuth();
+  const { newsList, fetchNews, isLoading } = useNews();
   const [unreadCount] = useState(3);
+  const [recentNews, setRecentNews] = useState<News[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("userData");
-    if (stored) {
-      setUserData(JSON.parse(stored));
-    } else {
-      setUserData({
-        fullname: "Akbar Chalay",
-        businessName: "PT Semua Teman",
-        kartuNumber: "1234567890",
-      });
-    }
-
-    fetchRecentNews();
+    // Fetch news on mount
+    loadNews();
   }, []);
 
-  const fetchRecentNews = async () => {
+  const loadNews = async () => {
     try {
-      // Replace with actual API call
-      // const response = await fetch(`${API_BASE_URL}/mobile/news?limit=5`);
-      // const data = await response.json();
-
-      // Mock data for now - 5 berita terbaru
-      const mockNews: News[] = [
-        {
-          id: 1,
-          title: "Kisah Sukses: Dari Warung Kecil hingga Ekspor ke 5 Negara",
-          slug: "kisah-sukses-dari-warung-kecil-hingga-ekspor-ke-5-negara",
-          excerpt:
-            "Pak Budi berhasil mengembangkan usaha keripik singkongnya dari warung kecil hingga ekspor ke 5 negara",
-          thumbnail:
-            "https://storage.miftech.web.id/umkmgo-news/kisah_sukses:_dari_warung_kecil_hingga_ekspor_ke_5_negara/news_thumbnail___1764342206.png",
-          category: "success_story",
-          author_name: "Super Admin",
-          views_count: 1250,
-          created_at: "2025-11-28 15:03:32",
-        },
-        {
-          id: 2,
-          title: "Expo UMKM Jakarta 2025 - Pameran Produk Lokal Terbesar",
-          slug: "expo-umkm-jakarta-2025-pameran-produk-lokal-terbesar",
-          excerpt:
-            "Kami mengundang seluruh pelaku UMKM untuk berpartisipasi dalam Expo UMKM Jakarta 2025",
-          thumbnail:
-            "http://127.0.0.1:9000/umkmgo-programs/expo_umkm_jakarta_2025_-_pameran_produk_lokal_terbesar/news_thumbnail___1764337504.png",
-          category: "event",
-          author_name: "Super Admin",
-          views_count: 850,
-          created_at: "2025-11-28 20:45:04",
-        },
-        {
-          id: 3,
-          title: "Tips Digital Marketing untuk UMKM Pemula",
-          slug: "tips-digital-marketing-untuk-umkm-pemula",
-          excerpt:
-            "Pelajari strategi digital marketing yang efektif untuk meningkatkan penjualan online Anda",
-          thumbnail:
-            "https://via.placeholder.com/400x200/0077B6/FFFFFF?text=Digital+Marketing",
-          category: "tips",
-          author_name: "Marketing Team",
-          views_count: 2100,
-          created_at: "2025-11-27 10:30:00",
-        },
-        {
-          id: 4,
-          title: "Kebijakan Baru Pemerintah untuk UMKM 2025",
-          slug: "kebijakan-baru-pemerintah-untuk-umkm-2025",
-          excerpt:
-            "Pemerintah meluncurkan kebijakan baru yang memberikan kemudahan akses pembiayaan bagi UMKM",
-          thumbnail:
-            "https://via.placeholder.com/400x200/00B4D8/FFFFFF?text=Kebijakan+Baru",
-          category: "news",
-          author_name: "News Editor",
-          views_count: 1750,
-          created_at: "2025-11-26 14:20:00",
-        },
-        {
-          id: 5,
-          title: "Cara Mendapatkan Sertifikat Halal untuk Produk UMKM",
-          slug: "cara-mendapatkan-sertifikat-halal-untuk-produk-umkm",
-          excerpt:
-            "Panduan lengkap proses pengajuan dan persyaratan sertifikasi halal untuk produk makanan",
-          thumbnail:
-            "https://via.placeholder.com/400x200/0096C7/FFFFFF?text=Sertifikat+Halal",
-          category: "guide",
-          author_name: "Admin Content",
-          views_count: 980,
-          created_at: "2025-11-25 09:15:00",
-        },
-      ];
-
-      setRecentNews(mockNews);
+      await fetchNews();
     } catch (error) {
-      console.error("Error fetching recent news:", error);
+      console.error("Error fetching news:", error);
     }
   };
+
+  useEffect(() => {
+    // Update recent news (5 berita terbaru)
+    if (newsList.length > 0) {
+      setRecentNews(newsList.slice(0, 5));
+    }
+  }, [newsList]);
 
   const getCategoryLabel = (category: string) => {
     const labels: { [key: string]: { label: string; color: string } } = {
@@ -148,6 +59,7 @@ export default function DashboardScreen() {
       news: { label: "Berita", color: "bg-orange-100 text-orange-700" },
       guide: { label: "Panduan", color: "bg-indigo-100 text-indigo-700" },
     };
+
     return (
       labels[category] || {
         label: category,
@@ -207,7 +119,7 @@ export default function DashboardScreen() {
           <div>
             <p className="text-sm font-medium text-white/80">Selamat Datang</p>
             <h1 className="mt-1 text-3xl font-bold text-white">
-              {userData?.fullname.split(" ")[0]}
+              {user?.name?.split(" ")[0] || "User"}
             </h1>
           </div>
           <Button
@@ -233,16 +145,16 @@ export default function DashboardScreen() {
                   </p>
                 </div>
                 <h2 className="text-foreground text-xl font-bold">
-                  {userData?.fullname}
+                  {user?.name || "User"}
                 </h2>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  {userData?.businessName}
+                  {user?.business_name || "-"}
                 </p>
                 <div className="mt-4 flex items-center gap-2">
                   <div className="flex-1">
-                    <p className="text-muted-foreground text-xs">Nomor Kartu</p>
-                    <p className="font-mono text-sm font-semibold">
-                      **** **** **** {userData?.kartuNumber.slice(-4)}
+                    <p className="text-muted-foreground text-xs">Tipe Kartu</p>
+                    <p className="font-mono text-sm font-semibold uppercase">
+                      {user?.kartu_type || "-"}
                     </p>
                   </div>
                 </div>
@@ -361,56 +273,74 @@ export default function DashboardScreen() {
             Lihat Semua
           </button>
         </div>
-        <div className="space-y-3">
-          {recentNews.map((item) => {
-            const categoryInfo = getCategoryLabel(item.category);
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(`/news/${item.slug}`)}
-                className="w-full text-left"
-              >
-                <Card className="border-blue-100 transition-all hover:scale-[1.01] hover:shadow-md">
-                  <CardContent className="p-0">
-                    <div className="flex gap-3 p-3">
-                      <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg">
-                        <img
-                          src={item.thumbnail}
-                          alt={item.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col justify-between">
-                        <div>
-                          <div className="mb-1">
-                            <span
-                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${categoryInfo.color}`}
-                            >
-                              {categoryInfo.label}
-                            </span>
-                          </div>
-                          <h4 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold">
-                            {item.title}
-                          </h4>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          </div>
+        ) : recentNews.length === 0 ? (
+          <Card className="border-blue-100">
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">Belum ada berita tersedia</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {recentNews.map((item) => {
+              const categoryInfo = getCategoryLabel(item.category);
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(`/news/${item.slug}`)}
+                  className="w-full text-left"
+                >
+                  <Card className="border-blue-100 transition-all hover:scale-[1.01] hover:shadow-md">
+                    <CardContent className="p-0">
+                      <div className="flex gap-3 p-3">
+                        <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg">
+                          <img
+                            src={item.thumbnail}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src =
+                                "https://via.placeholder.com/400x200/0077B6/FFFFFF?text=News";
+                            }}
+                          />
                         </div>
-                        <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
-                          <div className="flex items-center gap-1">
-                            <Calendar size={12} />
-                            <span>{formatDate(item.created_at)}</span>
+                        <div className="flex flex-1 flex-col justify-between">
+                          <div>
+                            <div className="mb-1">
+                              <span
+                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${categoryInfo.color}`}
+                              >
+                                {categoryInfo.label}
+                              </span>
+                            </div>
+                            <h4 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold">
+                              {item.title}
+                            </h4>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Eye size={12} />
-                            <span>{formatViewCount(item.views_count)}</span>
+                          <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
+                            <div className="flex items-center gap-1">
+                              <Calendar size={12} />
+                              <span>{formatDate(item.created_at)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye size={12} />
+                              <span>{formatViewCount(item.views_count)}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </button>
-            );
-          })}
-        </div>
+                    </CardContent>
+                  </Card>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <BottomNavigation unreadCount={unreadCount} />

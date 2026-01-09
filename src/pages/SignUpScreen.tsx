@@ -4,15 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
-import { ArrowLeft, Eye, EyeOff, UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SignUpScreen() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,32 +21,37 @@ export default function SignUpScreen() {
     setError("");
 
     try {
-      if (!email || !phone || !password || !confirmPassword) {
+      if (!email || !phone) {
         setError("Semua field harus diisi");
         setLoading(false);
         return;
       }
 
-      if (password !== confirmPassword) {
-        setError("Password tidak cocok");
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Format email tidak valid");
         setLoading(false);
         return;
       }
 
-      if (password.length < 8) {
-        setError("Password minimal 8 karakter");
+      // Phone validation (must be numbers)
+      if (!/^\d+$/.test(phone)) {
+        setError("Nomor telepon hanya boleh berisi angka");
         setLoading(false);
         return;
       }
 
-      localStorage.setItem("tempPhone", phone);
-      localStorage.setItem("signupEmail", email);
+      const result = await register({ email, phone });
 
-      setTimeout(() => {
+      if (result.success) {
         navigate("/verify-otp", { state: { phone, mode: "signup" } });
-      }, 500);
+      } else {
+        setError(result.message || "Gagal mendaftar. Coba lagi.");
+      }
     } catch (err) {
       setError("Gagal mendaftar. Coba lagi.");
+    } finally {
       setLoading(false);
     }
   };
@@ -112,42 +116,8 @@ export default function SignUpScreen() {
               />
             </div>
             <p className="text-muted-foreground text-xs">
-              Verifikasi akan dikirim via WhatsApp
+              Verifikasi akan dikirim via WhatsApp. Password akan dibuat setelah verifikasi OTP.
             </p>
-          </div>
-
-          {/* Password Field */}
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimal 8 karakter"
-                className="pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-4 -translate-y-1/2 transition-colors"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password Field */}
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Ulangi password"
-            />
           </div>
 
           {/* Submit Button */}

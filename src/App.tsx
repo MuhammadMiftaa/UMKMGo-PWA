@@ -4,7 +4,7 @@ import WelcomeScreen from "./pages/WelcomeScreen";
 import LoginScreen from "./pages/LoginScreen";
 import SignUpScreen from "./pages/SignUpScreen";
 import VerifyOTPScreen from "./pages/VerifyOTPScreen";
-import CompleteProfileScreen from "./pages/CompleteProfileScreen";
+// import CompleteProfileScreen from "./pages/CompleteProfileScreen";
 import ForgotPasswordScreen from "./pages/ForgotPasswordScreen";
 import ResetPasswordScreen from "./pages/ResetPasswordScreen";
 import DashboardScreen from "./pages/DashboardScreen";
@@ -23,6 +23,7 @@ import EditProfileScreen from "./pages/EditProfileScreen";
 import NewsListScreen from "./pages/NewsListScreen";
 import DetailNewsScreen from "./pages/DetailNewsScreen";
 import ReviseApplicationScreen from "./pages/ReviseApplicationScreen";
+import CompleteRegisterData from "./pages/CompleteRegisterData";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -67,7 +68,8 @@ function App() {
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/signup" element={<SignUpScreen />} />
       <Route path="/verify-otp" element={<VerifyOTPScreen />} />
-      <Route path="/complete-profile" element={<CompleteProfileScreen />} />
+      {/* <Route path="/complete-profile" element={<CompleteProfileScreen />} /> */}
+      <Route path="/complete-profile" element={<CompleteRegisterData />} />
       <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
       <Route path="/reset-password" element={<ResetPasswordScreen />} />
 

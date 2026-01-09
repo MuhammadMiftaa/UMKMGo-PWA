@@ -3,10 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { ArrowLeft, Shield, MessageSquare } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { formatPhoneForDisplay } from "../lib/api";
 
 export default function VerifyOTPScreen() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { verifyOTP, register, forgotPassword } = useAuth();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [loading, setLoading] = useState(false);
@@ -55,26 +58,51 @@ export default function VerifyOTPScreen() {
         return;
       }
 
-      const mockTempToken = "temp_token_abc123xyz";
-      localStorage.setItem("tempToken", mockTempToken);
+      const result = await verifyOTP({
+        phone: state.phone,
+        otp_code: otpCode,
+      });
 
-      setTimeout(() => {
+      if (result.success && result.tempToken) {
         if (state.mode === "signup") {
           navigate("/complete-profile", {
-            state: { tempToken: mockTempToken },
+            state: { tempToken: result.tempToken },
           });
         } else if (state.mode === "forgot-password") {
-          navigate("/reset-password");
+          navigate("/reset-password", {
+            state: { tempToken: result.tempToken },
+          });
         }
-      }, 500);
+      } else {
+        setError(result.message || "Verifikasi OTP gagal. Coba lagi.");
+      }
     } catch (err) {
       setError("Verifikasi OTP gagal. Coba lagi.");
+    } finally {
       setLoading(false);
     }
   };
 
+  const handleResendOTP = async () => {
+    setTimer(59);
+    setError("");
+
+    try {
+      if (state.mode === "signup") {
+        const email = localStorage.getItem("tempEmail") || "";
+        await register({ email, phone: state.phone });
+      } else if (state.mode === "forgot-password") {
+        await forgotPassword(state.phone);
+      }
+    } catch (err) {
+      setError("Gagal mengirim ulang OTP");
+    }
+  };
+
   const maskPhone = (phone: string) => {
-    return `+62${phone.substring(0, 3)}xxxx${phone.substring(7)}`;
+    const formatted = formatPhoneForDisplay(phone);
+    // Mask format: +628xxx****xxx
+    return formatted.substring(0, 7) + "xxxx" + formatted.substring(11);
   };
 
   return (
@@ -158,7 +186,7 @@ export default function VerifyOTPScreen() {
             </p>
           ) : (
             <button
-              onClick={() => setTimer(59)}
+              onClick={handleResendOTP}
               className="text-primary text-sm font-semibold hover:underline"
             >
               Kirim Ulang Kode OTP

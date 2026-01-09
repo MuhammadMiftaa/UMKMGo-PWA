@@ -5,9 +5,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { ArrowLeft, KeyRound, Send } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function ForgotPasswordScreen() {
   const navigate = useNavigate();
+  const { forgotPassword } = useAuth();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,11 +26,16 @@ export default function ForgotPasswordScreen() {
         return;
       }
 
-      setTimeout(() => {
+      const result = await forgotPassword(phone);
+
+      if (result.success) {
         navigate("/verify-otp", { state: { phone, mode: "forgot-password" } });
-      }, 500);
+      } else {
+        setError(result.message || "Terjadi kesalahan. Coba lagi.");
+      }
     } catch (err) {
       setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
       setLoading(false);
     }
   };

@@ -18,7 +18,11 @@ export default function WelcomeScreen() {
           {/* Logo */}
           <div className="mb-12 text-center">
             <div className="from-primary via-accent to-secondary mb-3 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-linear-to-br shadow-lg">
-              <Briefcase className="h-10 w-10 text-white" />
+              <img
+                className="h-16 w-16 brightness-10000"
+                src="/logo.png"
+                alt="UMKMGo Logo"
+              />
             </div>
             <h1 className="from-primary via-accent to-secondary mt-6 bg-linear-to-r bg-clip-text text-5xl font-bold text-transparent">
               UMKMGo

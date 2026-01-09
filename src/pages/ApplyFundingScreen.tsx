@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useProgram } from "../contexts/ProgramContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useProfile, type UserDocument } from "../contexts/ProfileContext";
 
 interface FormData {
   business_sector: string;
@@ -45,7 +46,10 @@ export default function ApplyFundingScreen() {
   const { id } = useParams();
   const { applyFunding } = useProgram();
   const { user } = useAuth();
+  const { getDocuments } = useProfile();
   const [loading, setLoading] = useState(false);
+  const [profileDocuments, setProfileDocuments] = useState<UserDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     business_sector: "",
     business_description: "",
@@ -68,6 +72,37 @@ export default function ApplyFundingScreen() {
     dokumen_agunan: null,
   });
   const [error, setError] = useState("");
+
+  // Load profile documents on mount
+  useEffect(() => {
+    const loadProfileDocuments = async () => {
+      try {
+        const docs = await getDocuments();
+        setProfileDocuments(docs);
+      } catch (err) {
+        console.error("Error loading profile documents:", err);
+      } finally {
+        setLoadingDocs(false);
+      }
+    };
+    loadProfileDocuments();
+  }, []);
+
+  // Helper to get profile document URL by type
+  const getProfileDocUrl = (type: string): string | null => {
+    const doc = profileDocuments.find((d) => d.document_type === type);
+    return doc?.document_url || null;
+  };
+
+  // Helper to extract filename from URL
+  const getFilenameFromUrl = (url: string): string => {
+    try {
+      const pathname = new URL(url).pathname;
+      return pathname.split("/").pop() || "Dokumen dari Profil";
+    } catch {
+      return "Dokumen dari Profil";
+    }
+  };
 
   const businessSectors = [
     "Kuliner & F&B",
@@ -158,32 +193,55 @@ export default function ApplyFundingScreen() {
         return;
       }
 
-      // Validasi dokumen required
-      const requiredDocs: (keyof Documents)[] = [
-        "ktp",
-        "nib",
-        "npwp",
-        "rekening",
-        "proposal",
-        "laporan_keuangan",
+      // Check if documents are available (either uploaded or from profile)
+      const docMapping: {
+        key: keyof Documents;
+        profileType: string;
+        label: string;
+      }[] = [
+        { key: "ktp", profileType: "ktp", label: "KTP" },
+        { key: "nib", profileType: "nib", label: "NIB" },
+        { key: "npwp", profileType: "npwp", label: "NPWP" },
+        { key: "rekening", profileType: "rekening", label: "Rekening" },
+        { key: "proposal", profileType: "proposal", label: "Proposal" },
+        {
+          key: "laporan_keuangan",
+          profileType: "revenue_record",
+          label: "Laporan Keuangan",
+        },
       ];
-      const missingDocs = requiredDocs.filter((doc) => !documents[doc]);
+
+      const missingDocs = docMapping.filter(
+        (doc) => !documents[doc.key] && !getProfileDocUrl(doc.profileType),
+      );
 
       if (missingDocs.length > 0) {
-        setError(`Dokumen wajib belum lengkap: ${missingDocs.join(", ")}`);
+        setError(
+          `Dokumen wajib belum lengkap: ${missingDocs.map((d) => d.label).join(", ")}`,
+        );
         setLoading(false);
         return;
       }
 
-      // Convert files to base64
-      const ktpBase64 = await fileToBase64(documents.ktp!);
-      const nibBase64 = await fileToBase64(documents.nib!);
-      const npwpBase64 = await fileToBase64(documents.npwp!);
-      const rekeningBase64 = await fileToBase64(documents.rekening!);
-      const proposalBase64 = await fileToBase64(documents.proposal!);
-      const financialRecordsBase64 = await fileToBase64(
-        documents.laporan_keuangan!,
-      );
+      // Convert files to base64 or use profile document URL
+      const ktpBase64 = documents.ktp
+        ? await fileToBase64(documents.ktp)
+        : getProfileDocUrl("ktp") || undefined;
+      const nibBase64 = documents.nib
+        ? await fileToBase64(documents.nib)
+        : getProfileDocUrl("nib") || undefined;
+      const npwpBase64 = documents.npwp
+        ? await fileToBase64(documents.npwp)
+        : getProfileDocUrl("npwp") || undefined;
+      const rekeningBase64 = documents.rekening
+        ? await fileToBase64(documents.rekening)
+        : getProfileDocUrl("rekening") || undefined;
+      const proposalBase64 = documents.proposal
+        ? await fileToBase64(documents.proposal)
+        : getProfileDocUrl("proposal") || undefined;
+      const financialRecordsBase64 = documents.laporan_keuangan
+        ? await fileToBase64(documents.laporan_keuangan)
+        : getProfileDocUrl("revenue_record") || undefined;
       const dokumenAgunanBase64 = documents.dokumen_agunan
         ? await fileToBase64(documents.dokumen_agunan)
         : undefined;
@@ -203,12 +261,12 @@ export default function ApplyFundingScreen() {
           parseInt(formData.requested_tenure_months) || 0,
         collateral_description: formData.collateral_description,
         documents: {
-          ktp: ktpBase64,
-          nib: nibBase64,
-          npwp: npwpBase64,
-          rekening: rekeningBase64,
-          proposal: proposalBase64,
-          financial_records: financialRecordsBase64,
+          ktp: ktpBase64!,
+          nib: nibBase64!,
+          npwp: npwpBase64!,
+          rekening: rekeningBase64!,
+          proposal: proposalBase64!,
+          financial_records: financialRecordsBase64!,
           dokumen_agunan: dokumenAgunanBase64,
         },
       });
@@ -559,105 +617,126 @@ export default function ApplyFundingScreen() {
                 <h2 className="text-foreground font-bold">Upload Dokumen</h2>
               </div>
 
-              <div className="space-y-4">
-                {/* KTP */}
-                <div className="space-y-2">
-                  <Label>
-                    KTP <span className="text-red-500">*</span>
-                  </Label>
-                  <FileUploadBox
-                    id="ktp"
-                    file={documents.ktp}
-                    onChange={(e) => handleFileChange(e, "ktp")}
-                    label="Pilih file KTP"
-                    color="blue"
-                  />
+              {loadingDocs ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"></div>
+                  <span className="text-muted-foreground ml-2 text-sm">
+                    Memuat dokumen dari profil...
+                  </span>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* KTP */}
+                  <div className="space-y-2">
+                    <Label>
+                      KTP <span className="text-red-500">*</span>
+                    </Label>
+                    <FileUploadBox
+                      id="ktp"
+                      file={documents.ktp}
+                      onChange={(e) => handleFileChange(e, "ktp")}
+                      label="Pilih file KTP"
+                      color="blue"
+                      profileDocUrl={getProfileDocUrl("ktp")}
+                      getFilenameFromUrl={getFilenameFromUrl}
+                    />
+                  </div>
 
-                {/* NIB */}
-                <div className="space-y-2">
-                  <Label>
-                    NIB <span className="text-red-500">*</span>
-                  </Label>
-                  <FileUploadBox
-                    id="nib"
-                    file={documents.nib}
-                    onChange={(e) => handleFileChange(e, "nib")}
-                    label="Pilih file NIB"
-                    color="purple"
-                  />
-                </div>
+                  {/* NIB */}
+                  <div className="space-y-2">
+                    <Label>
+                      NIB <span className="text-red-500">*</span>
+                    </Label>
+                    <FileUploadBox
+                      id="nib"
+                      file={documents.nib}
+                      onChange={(e) => handleFileChange(e, "nib")}
+                      label="Pilih file NIB"
+                      color="purple"
+                      profileDocUrl={getProfileDocUrl("nib")}
+                      getFilenameFromUrl={getFilenameFromUrl}
+                    />
+                  </div>
 
-                {/* NPWP */}
-                <div className="space-y-2">
-                  <Label>
-                    NPWP <span className="text-red-500">*</span>
-                  </Label>
-                  <FileUploadBox
-                    id="npwp"
-                    file={documents.npwp}
-                    onChange={(e) => handleFileChange(e, "npwp")}
-                    label="Pilih file NPWP"
-                    color="indigo"
-                  />
-                </div>
+                  {/* NPWP */}
+                  <div className="space-y-2">
+                    <Label>
+                      NPWP <span className="text-red-500">*</span>
+                    </Label>
+                    <FileUploadBox
+                      id="npwp"
+                      file={documents.npwp}
+                      onChange={(e) => handleFileChange(e, "npwp")}
+                      label="Pilih file NPWP"
+                      color="indigo"
+                      profileDocUrl={getProfileDocUrl("npwp")}
+                      getFilenameFromUrl={getFilenameFromUrl}
+                    />
+                  </div>
 
-                {/* Rekening Bank */}
-                <div className="space-y-2">
-                  <Label>
-                    Rekening Bank / Mutasi 3-6 Bulan{" "}
-                    <span className="text-red-500">*</span>
-                  </Label>
-                  <FileUploadBox
-                    id="rekening"
-                    file={documents.rekening}
-                    onChange={(e) => handleFileChange(e, "rekening")}
-                    label="Pilih file rekening"
-                    color="cyan"
-                  />
-                </div>
+                  {/* Rekening Bank */}
+                  <div className="space-y-2">
+                    <Label>
+                      Rekening Bank / Mutasi 3-6 Bulan{" "}
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <FileUploadBox
+                      id="rekening"
+                      file={documents.rekening}
+                      onChange={(e) => handleFileChange(e, "rekening")}
+                      label="Pilih file rekening"
+                      color="cyan"
+                      profileDocUrl={getProfileDocUrl("rekening")}
+                      getFilenameFromUrl={getFilenameFromUrl}
+                    />
+                  </div>
 
-                {/* Proposal Bisnis */}
-                <div className="space-y-2">
-                  <Label>
-                    Proposal Bisnis <span className="text-red-500">*</span>
-                  </Label>
-                  <FileUploadBox
-                    id="proposal"
-                    file={documents.proposal}
-                    onChange={(e) => handleFileChange(e, "proposal")}
-                    label="Pilih file proposal"
-                    color="green"
-                  />
-                </div>
+                  {/* Proposal Bisnis */}
+                  <div className="space-y-2">
+                    <Label>
+                      Proposal Bisnis <span className="text-red-500">*</span>
+                    </Label>
+                    <FileUploadBox
+                      id="proposal"
+                      file={documents.proposal}
+                      onChange={(e) => handleFileChange(e, "proposal")}
+                      label="Pilih file proposal"
+                      color="green"
+                      profileDocUrl={getProfileDocUrl("proposal")}
+                      getFilenameFromUrl={getFilenameFromUrl}
+                    />
+                  </div>
 
-                {/* Laporan Keuangan */}
-                <div className="space-y-2">
-                  <Label>
-                    Laporan Keuangan / Catatan Omzet{" "}
-                    <span className="text-red-500">*</span>
-                  </Label>
-                  <FileUploadBox
-                    id="laporan_keuangan"
-                    file={documents.laporan_keuangan}
-                    onChange={(e) => handleFileChange(e, "laporan_keuangan")}
-                    label="Pilih file laporan keuangan"
-                    color="amber"
-                  />
-                </div>
+                  {/* Laporan Keuangan */}
+                  <div className="space-y-2">
+                    <Label>
+                      Laporan Keuangan / Catatan Omzet{" "}
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <FileUploadBox
+                      id="laporan_keuangan"
+                      file={documents.laporan_keuangan}
+                      onChange={(e) => handleFileChange(e, "laporan_keuangan")}
+                      label="Pilih file laporan keuangan"
+                      color="amber"
+                      profileDocUrl={getProfileDocUrl("revenue_record")}
+                      getFilenameFromUrl={getFilenameFromUrl}
+                    />
+                  </div>
 
-                {/* Dokumen Agunan */}
-                <div className="space-y-2">
-                  <Label>Dokumen Agunan (Opsional)</Label>
-                  <FileUploadBox
-                    id="dokumen_agunan"
-                    file={documents.dokumen_agunan}
-                    onChange={(e) => handleFileChange(e, "dokumen_agunan")}
-                    label="Pilih file agunan"
-                    color="orange"
-                  />
+                  {/* Dokumen Agunan */}
+                  <div className="space-y-2">
+                    <Label>Dokumen Agunan (Opsional)</Label>
+                    <FileUploadBox
+                      id="dokumen_agunan"
+                      file={documents.dokumen_agunan}
+                      onChange={(e) => handleFileChange(e, "dokumen_agunan")}
+                      label="Pilih file agunan"
+                      color="orange"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -722,6 +801,8 @@ interface FileUploadBoxProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   label: string;
   color: string;
+  profileDocUrl?: string | null;
+  getFilenameFromUrl?: (url: string) => string;
 }
 
 function FileUploadBox({
@@ -730,7 +811,12 @@ function FileUploadBox({
   onChange,
   label,
   color,
+  profileDocUrl,
+  getFilenameFromUrl,
 }: FileUploadBoxProps) {
+  const hasFile = !!file;
+  const hasProfileDoc = !!profileDocUrl;
+
   const colorMap: Record<string, { bg: string; text: string; icon: string }> = {
     blue: { bg: "bg-blue-50", text: "text-blue-600", icon: "bg-blue-100" },
     purple: {
@@ -766,7 +852,11 @@ function FileUploadBox({
       />
       <label
         htmlFor={id}
-        className={`border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed ${colors.bg} hover:bg-opacity-70 p-4 transition-all`}
+        className={`flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed p-4 transition-all ${
+          hasFile || hasProfileDoc
+            ? "border-green-300 bg-green-50/50 hover:border-green-400"
+            : `border-border ${colors.bg} hover:border-primary hover:bg-opacity-70`
+        }`}
       >
         <div className="flex items-center gap-3">
           <div className={`rounded-xl ${colors.icon} p-2`}>
@@ -774,14 +864,24 @@ function FileUploadBox({
           </div>
           <div>
             <p className="text-foreground text-sm font-semibold">
-              {file ? file.name : label}
+              {hasFile
+                ? file!.name
+                : hasProfileDoc && getFilenameFromUrl
+                  ? `Dari Profil: ${getFilenameFromUrl(profileDocUrl!)}`
+                  : label}
             </p>
             <p className="text-muted-foreground text-xs">
-              Format: JPG, PNG, PDF (Max 5MB)
+              {hasFile
+                ? "File baru dipilih"
+                : hasProfileDoc
+                  ? "Klik untuk mengganti dengan file baru"
+                  : "Format: JPG, PNG, PDF (Max 5MB)"}
             </p>
           </div>
         </div>
-        {file && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+        {(hasFile || hasProfileDoc) && (
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+        )}
       </label>
     </div>
   );

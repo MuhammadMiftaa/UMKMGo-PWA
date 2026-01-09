@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useProgram } from "../contexts/ProgramContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useProfile, type UserDocument } from "../contexts/ProfileContext";
 
 interface FormData {
   business_sector: string;
@@ -30,7 +31,10 @@ export default function ApplyCertificationScreen() {
   const { id } = useParams();
   const { applyCertification } = useProgram();
   const { user } = useAuth();
+  const { getDocuments } = useProfile();
   const [loading, setLoading] = useState(false);
+  const [profileDocuments, setProfileDocuments] = useState<UserDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     business_sector: "",
     product_or_service: "",
@@ -47,6 +51,37 @@ export default function ApplyCertificationScreen() {
     izin_usaha: null as File | null,
   });
   const [error, setError] = useState("");
+
+  // Load profile documents on mount
+  useEffect(() => {
+    const loadProfileDocuments = async () => {
+      try {
+        const docs = await getDocuments();
+        setProfileDocuments(docs);
+      } catch (err) {
+        console.error("Error loading profile documents:", err);
+      } finally {
+        setLoadingDocs(false);
+      }
+    };
+    loadProfileDocuments();
+  }, []);
+
+  // Helper to get profile document URL by type
+  const getProfileDocUrl = (type: string): string | null => {
+    const doc = profileDocuments.find((d) => d.document_type === type);
+    return doc?.document_url || null;
+  };
+
+  // Helper to extract filename from URL
+  const getFilenameFromUrl = (url: string): string => {
+    try {
+      const pathname = new URL(url).pathname;
+      return pathname.split("/").pop() || "Dokumen dari Profil";
+    } catch {
+      return "Dokumen dari Profil";
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -105,25 +140,34 @@ export default function ApplyCertificationScreen() {
         return;
       }
 
-      if (
-        !documents.ktp ||
-        !documents.nib ||
-        !documents.npwp ||
-        !documents.portfolio
-      ) {
+      // Check if documents are available (either uploaded or from profile)
+      const hasKtp = documents.ktp || getProfileDocUrl("ktp");
+      const hasNib = documents.nib || getProfileDocUrl("nib");
+      const hasNpwp = documents.npwp || getProfileDocUrl("npwp");
+      const hasPortfolio = documents.portfolio || getProfileDocUrl("portfolio");
+
+      if (!hasKtp || !hasNib || !hasNpwp || !hasPortfolio) {
         setError("Semua dokumen wajib harus diupload");
         setLoading(false);
         return;
       }
 
-      // Convert files to base64
-      const ktpBase64 = await fileToBase64(documents.ktp);
-      const nibBase64 = await fileToBase64(documents.nib);
-      const npwpBase64 = await fileToBase64(documents.npwp);
-      const portfolioBase64 = await fileToBase64(documents.portfolio);
+      // Convert files to base64 or use profile document URL
+      const ktpBase64 = documents.ktp
+        ? await fileToBase64(documents.ktp)
+        : getProfileDocUrl("ktp") || undefined;
+      const nibBase64 = documents.nib
+        ? await fileToBase64(documents.nib)
+        : getProfileDocUrl("nib") || undefined;
+      const npwpBase64 = documents.npwp
+        ? await fileToBase64(documents.npwp)
+        : getProfileDocUrl("npwp") || undefined;
+      const portfolioBase64 = documents.portfolio
+        ? await fileToBase64(documents.portfolio)
+        : getProfileDocUrl("portfolio") || undefined;
       const izinUsahaBase64 = documents.izin_usaha
         ? await fileToBase64(documents.izin_usaha)
-        : undefined;
+        : getProfileDocUrl("business_permit") || undefined;
 
       // Submit to API
       await applyCertification({
@@ -135,10 +179,10 @@ export default function ApplyCertificationScreen() {
         current_standards: formData.current_standards,
         certification_goals: formData.certification_goals,
         documents: {
-          ktp: ktpBase64,
-          nib: nibBase64,
-          npwp: npwpBase64,
-          portfolio: portfolioBase64,
+          ktp: ktpBase64!,
+          nib: nibBase64!,
+          npwp: npwpBase64!,
+          portfolio: portfolioBase64!,
           izin_usaha: izinUsahaBase64,
         },
       });
@@ -396,76 +440,121 @@ export default function ApplyCertificationScreen() {
                 <h2 className="text-foreground font-bold">Upload Dokumen</h2>
               </div>
 
-              <div className="space-y-4">
-                {[
-                  { id: "ktp", label: "KTP", required: true, color: "blue" },
-                  { id: "nib", label: "NIB", required: true, color: "green" },
-                  {
-                    id: "npwp",
-                    label: "NPWP",
-                    required: true,
-                    color: "purple",
-                  },
-                  {
-                    id: "portfolio",
-                    label: "Portfolio Produk/Layanan",
-                    required: true,
-                    color: "orange",
-                  },
-                  {
-                    id: "izin_usaha",
-                    label: "Izin Usaha Lainnya",
-                    required: false,
-                    color: "gray",
-                  },
-                ].map((doc) => (
-                  <div key={doc.id} className="space-y-2">
-                    <Label>
-                      {doc.label}{" "}
-                      {doc.required && <span className="text-red-500">*</span>}
-                    </Label>
-                    <div className="relative">
-                      <input
-                        id={doc.id}
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) =>
-                          handleFileChange(e, doc.id as keyof typeof documents)
-                        }
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor={doc.id}
-                        className="border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed bg-blue-50/30 p-4 transition-all hover:bg-blue-50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`rounded-xl bg-${doc.color}-100 p-2`}>
-                            <Upload
-                              size={20}
-                              className={`text-${doc.color}-600`}
-                            />
-                          </div>
-                          <div>
-                            <p className="text-foreground text-sm font-semibold">
-                              {documents[doc.id as keyof typeof documents]
-                                ? documents[doc.id as keyof typeof documents]!
-                                    .name
-                                : `Pilih file ${doc.label}`}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              Format: JPG, PNG, PDF (Max{" "}
-                              {doc.id === "portfolio" ? "5MB" : "2MB"})
-                            </p>
-                          </div>
+              {loadingDocs ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"></div>
+                  <span className="text-muted-foreground ml-2 text-sm">
+                    Memuat dokumen dari profil...
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[
+                    {
+                      id: "ktp",
+                      profileType: "ktp",
+                      label: "KTP",
+                      required: true,
+                      color: "blue",
+                    },
+                    {
+                      id: "nib",
+                      profileType: "nib",
+                      label: "NIB",
+                      required: true,
+                      color: "green",
+                    },
+                    {
+                      id: "npwp",
+                      profileType: "npwp",
+                      label: "NPWP",
+                      required: true,
+                      color: "purple",
+                    },
+                    {
+                      id: "portfolio",
+                      profileType: "portfolio",
+                      label: "Portfolio Produk/Layanan",
+                      required: true,
+                      color: "orange",
+                    },
+                    {
+                      id: "izin_usaha",
+                      profileType: "business_permit",
+                      label: "Izin Usaha Lainnya",
+                      required: false,
+                      color: "gray",
+                    },
+                  ].map((doc) => {
+                    const profileDocUrl = getProfileDocUrl(doc.profileType);
+                    const hasFile = documents[doc.id as keyof typeof documents];
+                    const hasProfileDoc = !!profileDocUrl;
+
+                    return (
+                      <div key={doc.id} className="space-y-2">
+                        <Label>
+                          {doc.label}{" "}
+                          {doc.required && (
+                            <span className="text-red-500">*</span>
+                          )}
+                        </Label>
+                        <div className="relative">
+                          <input
+                            id={doc.id}
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) =>
+                              handleFileChange(
+                                e,
+                                doc.id as keyof typeof documents,
+                              )
+                            }
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor={doc.id}
+                            className={`flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed p-4 transition-all ${
+                              hasFile || hasProfileDoc
+                                ? "border-green-300 bg-green-50/50 hover:border-green-400"
+                                : "border-border hover:border-primary bg-blue-50/30 hover:bg-blue-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`rounded-xl bg-${doc.color}-100 p-2`}
+                              >
+                                <Upload
+                                  size={20}
+                                  className={`text-${doc.color}-600`}
+                                />
+                              </div>
+                              <div>
+                                <p className="text-foreground text-sm font-semibold">
+                                  {hasFile
+                                    ? hasFile.name
+                                    : hasProfileDoc
+                                      ? `Dari Profil: ${getFilenameFromUrl(profileDocUrl!)}`
+                                      : `Pilih file ${doc.label}`}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  {hasFile
+                                    ? "File baru dipilih"
+                                    : hasProfileDoc
+                                      ? "Klik untuk mengganti dengan file baru"
+                                      : `Format: JPG, PNG, PDF (Max ${doc.id === "portfolio" ? "5MB" : "2MB"})`}
+                                </p>
+                              </div>
+                            </div>
+                            {(hasFile || hasProfileDoc) && (
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            )}
+                          </label>
                         </div>
-                        {documents[doc.id as keyof typeof documents] && (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        )}
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 

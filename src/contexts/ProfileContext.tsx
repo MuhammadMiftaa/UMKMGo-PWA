@@ -65,6 +65,11 @@ export type DocumentType =
   | "revenue_record"
   | "business_permit";
 
+export interface UserDocument {
+  document_type: string;
+  document_url: string;
+}
+
 interface ProfileContextType {
   // State
   profile: UserProfile | null;
@@ -80,6 +85,7 @@ interface ProfileContextType {
     type: DocumentType,
     document: string,
   ) => Promise<{ success: boolean; message?: string }>;
+  getDocuments: () => Promise<UserDocument[]>;
   clearError: () => void;
   clearProfile: () => void;
 }
@@ -214,6 +220,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Get user documents (for Apply screens)
+  const getDocuments = async (): Promise<UserDocument[]> => {
+    try {
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        return [];
+      }
+
+      const response = await apiCall<UserDocument[]>(API_ENDPOINTS.DOCUMENTS, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response?.data || [];
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+      return [];
+    }
+  };
+
   const value: ProfileContextType = {
     profile,
     isLoading,
@@ -221,6 +249,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     fetchProfile,
     updateProfile,
     uploadDocument,
+    getDocuments,
     clearError,
     clearProfile,
   };

@@ -241,13 +241,13 @@ export default function DetailActivityScreen() {
               </div>
               <div className="flex-1">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-muted-foreground text-sm font-semibold">
-                    Status Pengajuan
+                  <p className="text-muted-foreground text-sm font-semibold text-nowrap">
+                    Status
                   </p>
                   <div
                     className={`rounded-full px-3 py-1 ${statusConfig.badgeColor}`}
                   >
-                    <p className="text-xs font-semibold">
+                    <p className="text-xs font-semibold text-nowrap">
                       {statusConfig.badge}
                     </p>
                   </div>

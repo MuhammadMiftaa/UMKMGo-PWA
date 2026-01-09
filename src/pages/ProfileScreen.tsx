@@ -12,7 +12,6 @@ import {
   MapPin,
   Briefcase,
   Edit,
-  ChevronRight,
   Loader2,
   AlertCircle,
   Check,
@@ -251,7 +250,6 @@ export default function ProfileScreen() {
                 <User className="text-primary h-5 w-5" />
               </div>
               <h3 className="text-foreground flex-1 font-bold">Data Pribadi</h3>
-              <ChevronRight className="text-muted-foreground h-5 w-5" />
             </div>
             <div className="p-4">
               <InfoRow label="NIK" value={profile?.nik || ""} />
@@ -280,7 +278,6 @@ export default function ProfileScreen() {
                 <MapPin className="h-5 w-5 text-green-600" />
               </div>
               <h3 className="text-foreground flex-1 font-bold">Alamat</h3>
-              <ChevronRight className="text-muted-foreground h-5 w-5" />
             </div>
             <div className="p-4">
               <InfoRow label="Alamat" value={profile?.address || ""} />
@@ -300,7 +297,6 @@ export default function ProfileScreen() {
                 <Briefcase className="h-5 w-5 text-indigo-600" />
               </div>
               <h3 className="text-foreground flex-1 font-bold">Kartu UMKM</h3>
-              <ChevronRight className="text-muted-foreground h-5 w-5" />
             </div>
             <div className="p-4">
               <InfoRow

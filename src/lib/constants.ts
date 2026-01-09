@@ -38,15 +38,16 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS: "/v1/mobile/notifications/list",
   NOTIFICATIONS_UNREAD_COUNT: "/v1/mobile/notifications/unread-count",
   NOTIFICATION_MARK_AS_READ: "/v1/mobile/notifications/mark-as-read", // + /:id
-  NOTIFICATIONS_MARK_ALL_READ: "/v1/mobile/notifications/mark-all-read",
+  NOTIFICATIONS_MARK_ALL_READ: "/v1/mobile/notifications/mark-all-as-read",
 
   // News
   NEWS: "/v1/mobile/news",
   NEWS_DETAIL: "/v1/mobile/news", // + /:slug
 
   // Documents
+  DOCUMENTS: "/v1/mobile/documents",
   DOCUMENT_UPLOAD: "/v1/mobile/documents/upload",
-} as const;  
+} as const;
 
 // Storage Keys
 export const STORAGE_KEYS = {

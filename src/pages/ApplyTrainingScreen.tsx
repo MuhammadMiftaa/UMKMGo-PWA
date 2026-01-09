@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Label } from "../components/ui/Label";
@@ -11,9 +11,11 @@ import {
   User,
   Briefcase,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useProgram } from "../contexts/ProgramContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useProfile, type UserDocument } from "../contexts/ProfileContext";
 
 interface FormData {
   motivation: string;
@@ -27,7 +29,10 @@ export default function ApplyTrainingScreen() {
   const { id } = useParams();
   const { applyTraining } = useProgram();
   const { user } = useAuth();
+  const { getDocuments } = useProfile();
   const [loading, setLoading] = useState(false);
+  const [loadingDocs, setLoadingDocs] = useState(true);
+  const [profileDocs, setProfileDocs] = useState<UserDocument[]>([]);
   const [formData, setFormData] = useState<FormData>({
     motivation: "",
     business_experience: "",
@@ -39,6 +44,34 @@ export default function ApplyTrainingScreen() {
     portfolio: null as File | null,
   });
   const [error, setError] = useState("");
+
+  // Fetch profile documents on mount
+  useEffect(() => {
+    const fetchDocs = async () => {
+      setLoadingDocs(true);
+      try {
+        const docs = await getDocuments();
+        setProfileDocs(docs);
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+      } finally {
+        setLoadingDocs(false);
+      }
+    };
+    fetchDocs();
+  }, []);
+
+  // Helper to get profile document URL by type
+  const getProfileDocUrl = (type: string): string | null => {
+    const doc = profileDocs.find((d) => d.document_type === type);
+    return doc?.document_url || null;
+  };
+
+  // Helper to get filename from URL
+  const getFilenameFromUrl = (url: string): string => {
+    const parts = url.split("/");
+    return parts[parts.length - 1] || "Dokumen dari profil";
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -77,17 +110,29 @@ export default function ApplyTrainingScreen() {
         return;
       }
 
-      if (!documents.ktp) {
+      // Check if KTP is available (either from file or profile)
+      const profileKtpUrl = getProfileDocUrl("ktp");
+      if (!documents.ktp && !profileKtpUrl) {
         setError("Dokumen KTP harus diupload");
         setLoading(false);
         return;
       }
 
-      // Convert files to base64
-      const ktpBase64 = await fileToBase64(documents.ktp);
-      const portfolioBase64 = documents.portfolio
-        ? await fileToBase64(documents.portfolio)
-        : undefined;
+      // Convert files to base64 or use profile URL
+      let ktpBase64: string;
+      if (documents.ktp) {
+        ktpBase64 = await fileToBase64(documents.ktp);
+      } else {
+        ktpBase64 = profileKtpUrl!; // Use profile URL
+      }
+
+      let portfolioBase64: string | undefined;
+      const profilePortfolioUrl = getProfileDocUrl("portfolio");
+      if (documents.portfolio) {
+        portfolioBase64 = await fileToBase64(documents.portfolio);
+      } else if (profilePortfolioUrl) {
+        portfolioBase64 = profilePortfolioUrl;
+      }
 
       // Submit to API
       await applyTraining({
@@ -304,81 +349,119 @@ export default function ApplyTrainingScreen() {
                 <h2 className="text-foreground font-bold">Upload Dokumen</h2>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>
-                    KTP <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <input
-                      id="ktp"
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleFileChange(e, "ktp")}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="ktp"
-                      className="border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed bg-blue-50/30 p-4 transition-all hover:bg-blue-50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-xl bg-blue-100 p-2">
-                          <Upload size={20} className="text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-semibold">
-                            {documents.ktp
-                              ? documents.ktp.name
-                              : "Pilih file KTP"}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            Format: JPG, PNG, PDF (Max 2MB)
-                          </p>
-                        </div>
-                      </div>
-                      {documents.ktp && (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      )}
-                    </label>
-                  </div>
+              {loadingDocs ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="text-primary h-6 w-6 animate-spin" />
+                  <span className="text-muted-foreground ml-2 text-sm">
+                    Memuat dokumen...
+                  </span>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>
+                      KTP <span className="text-red-500">*</span>
+                    </Label>
+                    {/* Show profile document if available */}
+                    {getProfileDocUrl("ktp") && !documents.ktp && (
+                      <div className="mb-2 flex items-center gap-2 rounded-lg bg-green-50 p-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="text-green-700">
+                          Menggunakan dokumen dari profil:{" "}
+                          <span className="font-medium">
+                            {getFilenameFromUrl(getProfileDocUrl("ktp")!)}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                    <div className="relative">
+                      <input
+                        id="ktp"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => handleFileChange(e, "ktp")}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="ktp"
+                        className="border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed bg-blue-50/30 p-4 transition-all hover:bg-blue-50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-xl bg-blue-100 p-2">
+                            <Upload size={20} className="text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">
+                              {documents.ktp
+                                ? documents.ktp.name
+                                : getProfileDocUrl("ktp")
+                                  ? "Ganti file KTP"
+                                  : "Pilih file KTP"}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              Format: JPG, PNG, PDF (Max 2MB)
+                            </p>
+                          </div>
+                        </div>
+                        {(documents.ktp || getProfileDocUrl("ktp")) && (
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        )}
+                      </label>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Portfolio Usaha/Produk (Opsional)</Label>
-                  <div className="relative">
-                    <input
-                      id="portfolio"
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleFileChange(e, "portfolio")}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="portfolio"
-                      className="border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed bg-blue-50/30 p-4 transition-all hover:bg-blue-50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-xl bg-green-100 p-2">
-                          <Upload size={20} className="text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-semibold">
-                            {documents.portfolio
-                              ? documents.portfolio.name
-                              : "Pilih file portfolio"}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            Format: JPG, PNG, PDF (Max 5MB)
-                          </p>
-                        </div>
+                  <div className="space-y-2">
+                    <Label>Portfolio Usaha/Produk (Opsional)</Label>
+                    {/* Show profile document if available */}
+                    {getProfileDocUrl("portfolio") && !documents.portfolio && (
+                      <div className="mb-2 flex items-center gap-2 rounded-lg bg-green-50 p-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="text-green-700">
+                          Menggunakan dokumen dari profil:{" "}
+                          <span className="font-medium">
+                            {getFilenameFromUrl(getProfileDocUrl("portfolio")!)}
+                          </span>
+                        </span>
                       </div>
-                      {documents.portfolio && (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      )}
-                    </label>
+                    )}
+                    <div className="relative">
+                      <input
+                        id="portfolio"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => handleFileChange(e, "portfolio")}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="portfolio"
+                        className="border-border hover:border-primary flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed bg-blue-50/30 p-4 transition-all hover:bg-blue-50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-xl bg-green-100 p-2">
+                            <Upload size={20} className="text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">
+                              {documents.portfolio
+                                ? documents.portfolio.name
+                                : getProfileDocUrl("portfolio")
+                                  ? "Ganti file portfolio"
+                                  : "Pilih file portfolio"}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              Format: JPG, PNG, PDF (Max 5MB)
+                            </p>
+                          </div>
+                        </div>
+                        {(documents.portfolio ||
+                          getProfileDocUrl("portfolio")) && (
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        )}
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
